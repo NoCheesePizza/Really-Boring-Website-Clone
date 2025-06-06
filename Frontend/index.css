@@ -406,7 +406,7 @@ body {
     padding-left: 1.75vh;
 }
 
-.most-improved.highest::before {
+.mostImproved.highest::before {
     content: "🔥 🏅";
     padding-right: 1.75vh;
 }
@@ -416,7 +416,7 @@ body {
     padding-right: 1.75vh;
 }
 
-.most-improved::before {
+.mostImproved::before {
     content: "🔥";
     padding-right: 1.75vh;
 }
@@ -485,12 +485,14 @@ body {
     /* position: relative; */
 }
 
-.sName::before {
+.sName i {
     /* /* content: " "; */
     padding-right: 2vh;
     /* height: 0.01vh; */
-    font-size: 2vh;
+    font-size: 2.2vh;
+    width: 2.2vh;
     color: rgba(var(--theme), 0.75);
+    display: inline-block;
 }
 
 .sValue {

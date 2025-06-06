@@ -1,0 +1,14 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "websocket server",
+  "main": "server.js",
+  "scripts": {
+    "test": "node server.js"
+  },
+  "author": "NoCheesePizza",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^8.18.2"
+  }
+}

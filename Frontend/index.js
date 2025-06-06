@@ -2,7 +2,7 @@
 
 /*
     hard mode where you can only use each word once
-    enter to go to next wrong/empty input
+    [done] enter to go to next wrong/empty input
 */
 
 //todo ------------ global ------------ //
@@ -14,12 +14,10 @@ let chosenLetter = "a";
 //todo ------------ answering ------------ //
 
 const inputs = document.querySelectorAll(".qInput");
+
 // wtf .fill() fills them up with references, i swear why the fuck can't languages be explicit as to whether something is a reference like goated cpp
-const answers = Array.from({ length: inputs.length }, () => ({
-    input: "",
-    answer: "",
-    identicalIndices: new Set()
-})); // answer only used for type 2 for bracket and similarity check (if type 1, input == answer)
+// answer only used for type 2 for bracket and similarity check (if type 1, input == answer)
+const answers = Array.from({ length: inputs.length }, () => ({ input: "", answer: "", identicalIndices: new Set() })); 
 const questions = document.querySelectorAll(".qContent");
 
 // focus caret at end instead of start of line
@@ -118,7 +116,6 @@ function checkValidity(element, index) {
         // not self and same answer
         if (answer == otherAnswer.answer) {
             setValidity(false, inputs[otherIndex]);
-            console.log(answers[0].identicalIndices === answers[1].identicalIndices);
             identicalIndices.add(otherIndex);
             answers[otherIndex].identicalIndices.add(index);
 
@@ -133,12 +130,12 @@ function checkValidity(element, index) {
         }
     });
 
-    answers.forEach((a, i) => {
-        console.log(`${i}: ${a.identicalIndices.size}`);
-        a.identicalIndices.forEach(elem => {
-            console.log(elem);
-        });
-    });
+    // answers.forEach((a, i) => {
+    //     console.log(`${i}: ${a.identicalIndices.size}`);
+    //     a.identicalIndices.forEach(elem => {
+    //         console.log(elem);
+    //     });
+    // });
 
     if (identicalIndices.size != 0) {
         isValid = false;
@@ -206,7 +203,6 @@ function moveCircleTo(row, col) {
     if (selection[row] == -1) {
         circles[row].style.width = "6vh";
         circles[row].style.height = "6vh";
-        // circles[row].style.border = "0.1vh solid var(--grey)";
         circles[row].style.transition = "box-shadow 0.5s ease, width 0.35s ease-in, height 0.35s ease-in, border-width 0.5s linear";
 
     // disappear
@@ -214,7 +210,6 @@ function moveCircleTo(row, col) {
         selection[row] = -1;
         circles[row].style.width = "0vh";
         circles[row].style.height = "0vh";
-        // circles[row].style.border = "0vh solid var(--grey)";
         return;
 
     // move
@@ -272,6 +267,7 @@ function hexToRgb(hex) {
     if (hex.length === 3) {
         hex = hex.split("").map(h => h + h).join("");
     }
+
     const num = parseInt(hex, 16);
     return {
         r: (num >> 16) & 255,
@@ -283,13 +279,13 @@ function hexToRgb(hex) {
 // colour input
 document.getElementById("color").addEventListener("input", event => {
     const rgb = hexToRgb(event.target.value);
-    console.log({ rgb });
+    theme = event.target.value;
     document.documentElement.style.setProperty("--theme", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
 });
 
-// rename
-document.getElementById("rename").addEventListener("click", _ => {
-    const username = prompt("Enter your username: ");
+// save color to local storage
+document.getElementById("color").addEventListener("blur", _ => {
+    localStorage.setItem("rbw_theme", theme);
 });
 
 // initialise configOptions
@@ -302,11 +298,16 @@ configMenus.forEach(menu => {
 });
 
 // click option to select it and close associated menu
-configOptions.forEach((config, index) => {
-    config.forEach(element => {
+// row refers to config type, column refers to config option
+configOptions.forEach((config, row) => {
+    config.forEach((element, column) => {
         element.addEventListener("click", () => {
-            configArrows[index].childNodes[0].textContent = element.textContent + " ";
-            closeMenu(index);
+            // configArrows[index].childNodes[0].textContent = element.textContent + " ";
+            closeMenu(row);
+
+            if (isConnected) {
+                socket.send(JSON.stringify({ header: "config", body: { row, column }}));
+            }
         });
     });
 });
@@ -348,5 +349,153 @@ configArrows.forEach((element, index) => {
         }
 
         menuIsClicked[index] = !menuIsClicked[index];
+    });
+});
+
+// rename button
+document.getElementById("rename").addEventListener("click", _ => {
+    const username = prompt("Enter your username: ");
+
+    if (isConnected) {
+        socket.send({ header: "rename", body: { username }});
+    }
+});
+
+// reset button
+document.getElementById("resetGame").addEventListener("click", _ => {
+    if (isConnected) {
+        socket.send(JSON.stringify({ header: "reset", body: { }}));
+    }
+});
+
+// start button
+document.getElementById("startGame").addEventListener("click", _ => {
+    if (isConnected) {
+        socket.send(JSON.stringify({ header: "transit", body: { to: 1 }}));
+    }
+});
+
+//todo ------------ server logic ------------ //
+
+function genRandomString(length) {
+    const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+        result += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return result;
+}
+
+const socket = new WebSocket("ws://localhost:8080");
+const id = localStorage.getItem("rbw_id") ?? genRandomString(32);
+const username = localStorage.getItem("rbw_username") ?? "New Player";
+const score = localStorage.getItem("rbw_score") ?? 0;
+const callbacks = new Map();
+let isLeader = false;
+let theme = localStorage.getItem("rbw_theme") ?? "#32C8FA";
+let isConnected = false; // check if socket is open before sending message
+
+localStorage.setItem("rbw_id", id);
+
+{
+    let rgb = hexToRgb(theme);
+    document.documentElement.style.setProperty("--theme", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+}
+
+document.getElementById("color").value = theme;
+
+socket.addEventListener("open", () => {
+
+    // join server
+    socket.send(JSON.stringify({ header: "enter", body: { id, username, score }}));
+    isConnected = true;
+});
+
+socket.addEventListener("message", message => {
+    const msg = JSON.parse(message.data);
+    console.log(`received: ${msg.header}`);
+    callbacks.get(msg.header)(msg.body);
+});
+
+// receive player list
+callbacks.set("players", ({ info, leaderId }) => {
+    const players = new Map(info);
+    let highestScore = 0;
+    let mostImprovedScore = 0;
+
+    // find highest score and most improved score
+    players.forEach((value, key) => {
+        highestScore = value.score > highestScore ? value.score : highestScore;
+        mostImprovedScore = value.deltaScore > mostImprovedScore ? value.deltaScore : mostImprovedScore;
+    });
+    
+    // redraw player list
+    const parentDiv = document.getElementById("players");
+    parentDiv.innerHTML = "";
+
+    // set self to leader
+    if (leaderId == id) {
+        isLeader = true;
+        document.getElementById("startGame").style.display = "block";
+        document.getElementById("resetGame").style.display = "block";
+
+    // hide buttons if not leader
+    } else {
+        isLeader = false;
+        document.getElementById("startGame").style.display = "none";
+        document.getElementById("resetGame").style.display = "none";
+    }
+
+    // key: id, value: { username, score, deltaScore, isNew }
+    players.forEach((value, key) => {
+    
+        const playerDiv = document.createElement("div");
+        playerDiv.classList.add("player");
+    
+        const pNameDiv = document.createElement("div");
+        pNameDiv.classList.add("pName");
+        pNameDiv.textContent = value.username;
+
+        if (id == key) {
+            pNameDiv.classList.add("you");
+        }
+        if (key == leaderId) {
+            pNameDiv.classList.add("host");
+        }
+
+        const pScoreAndDeltaDiv = document.createElement("div");
+        pScoreAndDeltaDiv.classList.add("pScoreAndDelta");
+
+        const pScoreDiv = document.createElement("div");
+        pScoreDiv.classList.add("pScore");
+        pScoreDiv.textContent = value.score;
+        
+        if (value.score == highestScore && !value.isNew) {
+            pScoreDiv.classList.add("highest");
+        }
+        if (value.deltaScore == mostImprovedScore && !value.isNew) {
+            pScoreDiv.classList.add("mostImproved");
+        }
+
+        const pDeltaDiv = document.createElement("div");
+        pDeltaDiv.classList.add("pDelta");
+        if (!value.isNew) {
+            pDeltaDiv.textContent = `(${value.deltaScore})`;
+        }
+
+        pScoreAndDeltaDiv.appendChild(pScoreDiv);
+        pScoreAndDeltaDiv.appendChild(pDeltaDiv);
+
+        playerDiv.appendChild(pNameDiv);
+        playerDiv.appendChild(pScoreAndDeltaDiv);
+
+        parentDiv.appendChild(playerDiv);
+    });
+});
+
+// receive changed config
+callbacks.set("config", ({ values }) => {
+    values.forEach((column, row) => {
+        configArrows[row].childNodes[0].textContent = configOptions[row][column].textContent + " ";
     });
 });

@@ -1,0 +1,389 @@
+Meat
+Dairy
+Hot things
+Cold things
+Indie videogames or developers
+Stores that sell food or drinks
+Singapore train stations
+Attractions
+Colours
+Fruits
+Sea creatures
+Occupations
+Spicy food
+Things you can find in this room
+Chemistry terms
+Math terms
+Trees
+Countries
+States or cities
+Things you can find in Popular
+Singaporean cuisine
+Japanese cuisine
+Foreign loan words
+Colourful objects
+Ways to chao keng
+Videogame terms
+Mobile apps
+Buttons you can find in the settings menu
+YouTube channels with more than 1000 subs
+Movie titles
+Anime or cartoon titles
+Things you can see through
+Green things
+Black things
+Dumb ways to die
+Weapons
+Things in a fantasy world
+Things in a futuristic world
+Hobbies
+Musical instruments
+School subjects
+Languages, language families, creoles, or dialects
+Celestial objects
+Fast things
+Junk food
+Things you can find in a hospital
+Words to describe food
+Words to describe a person's appearance
+Things that contain numbers
+Stationery
+Red things
+Things you can find at a beach
+Restaurants
+Things to do at a party
+Things you wear above your waist
+Human or natural disasters
+Excuses for being late
+Words related to money
+Cooking terms
+Reasons to get scolded by the teacher
+Drinks
+Units of Measurement
+Animal defence methods
+Song titles
+Pastries
+Controversial topics
+Singapore-related acronyms (state full name)
+Insults
+Body parts
+Bodies of water
+Senses
+Things you can find at a carnival
+Anything related to frontend development
+Modes of transport
+Things that move quickly
+Things that have a shell
+Cosmetics or toiletries
+Ways of communication
+Things you can do or make in Excel
+Expensive items
+Famous Singaporeans
+Allergies
+Bad habits
+Things that piss people off
+Invertebrates
+Words related to cells
+Things you can find in a police station
+Medicine or supplements
+Things that you can turn on
+Things that can turn you on
+Sports
+Things that can change size
+Singlish words
+Disgusting things
+Carbohydrates
+Western cuisine
+Things you bring to school
+Things smaller than your fist
+Morning routine
+Villains or bosses
+Intangible things
+Things with a long range
+Things that take less than five minutes
+Anything to do with cars
+Reasons to not submit your homework
+Famous people who are no longer alive
+Words or phrases with a colour word
+Places to stay the night at
+Orange or yellow things
+Things that you fold
+Book or movie genres
+Desserts
+Anything to do with ice-cream
+Crimes
+Things that come in pairs or sets
+Superpowers
+A common English boy's name
+A common English girl's name
+Mythical creatures or urban legends
+Things in Minecraft
+Vegetables
+Things you walk on
+Stones, minerals, or gems
+Videogame buffs or debuffs
+Things people lie about
+Singapore shopping malls
+Painful things
+Materials
+Ways to punish or torture someone
+Things that can fly
+Things that can be opened
+Breakfast food
+Anything to do with CNY
+Things that can change colour
+Non-digital games
+Military technology
+Metrics to rank a city by
+Reasons to run
+Things that emit light
+Fonts 
+Things people are afraid of
+Periods of time
+CCAs
+Buttons you can find in a photo editor
+Ways of getting rid of insects
+Types of uniforms
+Ways to hurt yourself
+Skills to be mastered
+Geography terms (no specific place names)
+(Pre)Historic events
+Types of buildings
+Obsessive behaviour
+Things that jump
+Things people use to decorate their houses
+Things you get tickets for
+Mammals
+Things with scales
+Sauces
+Things with more than two legs
+Underground things
+Sports equipment
+Proverbs, idioms, or famous quotes
+Anything related to religion
+Things you can find at a campsite
+Rare things
+Ways of generating electricity
+Reasons to lockdown
+Compound words
+Things on a tze char menu
+Reasons to shift houses
+Videogame characters
+Videogame genres
+Things you don't want in your house
+Things that have buttons
+Fermented food
+Electronics
+Bread spread
+Festivals or holidays
+Brown things
+Singapore schools
+Anime or cartoon characters
+Places you need clearance for
+Words with four syllables
+Things with pockets
+Words with at least four different vowels
+Things you can find a QR code on
+Reasons to get fined
+Fictional places
+Words related to arts and craft
+Reasons to dial 995
+Non-living things that grow
+Slow things
+Disorders or diseases
+Spherical objects
+Sharp objects
+Things people farm
+Things that are made of rubber
+Things that are made of metal
+Things that can be described as soft
+Plant parts
+Non-food items in a kitchen
+Anything to do with chocolate
+Biology terms
+Things you can make on your own
+Things with bugs
+Things named after famous people
+Possible dares from Truth or Dare
+Pseudoscience
+Body modifications
+Signs of growing up or aging
+Deadly animals
+Things that can be opened or closed
+Reptiles or amphibians
+Things in your house that can contain liquid
+Undrinkable liquids
+Technology companies
+Internal organs
+Gases
+Types of relationships
+Sensitive things
+Words with two or more meanings
+Virtues or sins
+Animal habitats
+Sour things
+Phone or computer hardware
+Long things
+Things that camouflage 
+Things that spin
+Things to do on a date
+Music theory
+Microphone or camera jargon
+Words to describe hair
+Fragile things
+Non-Singlish slang
+Sticky things
+Things or actions that prevent infections
+Things with locks
+Cute things or actions
+Non-game software
+Things you travel in or on
+Freshwater organisms
+Ranks, titles, or positions
+Common phrases
+Metrics to rank a phone by
+Coding functions
+Ways to screw up in NS
+Things that slither
+Things you can find in a toilet
+Differences between males and females
+Places in Europe or the Middle East
+Places in Asia or the Middle East
+Things or actions that hurt the environment
+Bands, singers, or songwriters
+Things you wear on or below your waist
+Anything to do with cards
+Physics terms
+Metrics to rank a job by
+Words to describe winter
+Stores that sell things you wear
+Things that can be described as corrupted
+Reasons to choose one school over another
+Anything related to Japan
+Anything related to Singapore
+Pokémons
+Emotions or feelings
+Sports attire
+Competitions
+Anything related to China
+Technology developed after 1900
+Dishes with eggs
+Books
+Anything related to India
+Anything related to Europe
+Things to do with your friends
+Reasons to choose someone as your SO
+Uniquely human traits
+Relationship red flags
+Household chores
+Sweet things
+Anything to do with sushi
+Islands or archipelagoes
+Things with magnets
+Programming languages, libraries, or frameworks
+Healthy food
+Data structures or algorithms
+Anything to do with NS
+Food you can eat raw
+Dishes with noodles
+Anything to do with bread
+Buttons in an IDE
+File extensions
+Anything related to cloud computing
+Anything related to game engines
+Things associated with luck
+Things you and a banana have in common
+Things with wheels
+Programming bugs/errors
+Words ending in "logy"
+Words ending in "ism"
+Words containing "ph"
+Onomatopeoia
+Verbs whose past tense does not end in "ed"
+Prefixes or suffixes
+Words with different US & UK spellings
+Words or phrases with a number
+White things
+Finger food
+Things that break easily
+Non-food items that expire
+Technology-related acronyms (state full name)
+Items below $10 but above $0
+Anything related to AI
+Rectangular objects
+Anything related to the weather or the sky
+Subscriptions or battle passes
+Multiplayer games
+Single-player games
+Anything related to Boomerang Fu or PlateUp!
+Number types or constants
+Memes or anything viral
+Clothing
+Blue things
+Words ending in "less"
+Food that crunch
+Dishes served with chopsticks
+Seafood
+Open source software
+Things to claim to get 1-2 days MC
+Overpriced items
+Scary things
+Loud or annoying sounds
+Things you can find at an airport
+Free items
+Items sold in a McDonald's
+Words with 3 or more of the same letter
+Shell commands
+Symbols used in math, science or coding
+Words containing "gh"
+Words ending in "al"
+Anything to do with digital art
+Writing tools
+Words to describe size or scale
+6 or more letter words with 1 vowel
+Regions in Singapore
+Words that start and end with the same letter
+Triple A videogames or studios
+Anything to do with operating systems
+Start of song verses (in any language)
+Anything to do with Christianity
+Actions that break school rules
+Anything to do with sex or sexual identity
+Non-playable videogame items
+Furniture
+Anything related to sleep
+Vices
+Ways to enrol into a school
+Birds
+Places in Oceania or the Americas 
+Places in Africa or the Middle East
+Anything to do with psychology
+Famous people who are still alive
+Anything related to mental illnesses
+Grey things
+Pink or purple things
+Things that are made of wood
+Anything related to the USA
+Anything to do with guns
+Books, games, or movies with sequels
+Book, game, or movie producer/publisher
+Processes in science
+Ways (not units) of measurement
+Words to describe a house
+Words to describe voice
+Words to describe a person's personality
+Reasons to rate a restaurant 1 star
+Reasons to rate a hotel 1 star
+Reasons to rate an airline 1 star
+Institutes of higher education
+Herbs, spices, or salads
+Fishes
+Metrics to rank a story by
+Arthropods
+Vertebrates
+Things you can find in an airplane
+Things you can find in a place of worship
+Things related to Apple or their products
+Things related to Microsoft or their products
+Things related to Google or their products
+Metrics to rank a game by
