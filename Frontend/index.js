@@ -6,6 +6,10 @@
     if you minimise voting circle when it's red, it will be red when u maximise it somewhere else
     refreshing questions page will reload user input (can just save words and validate all of them)
     bug where unselecting answer doesnt update total score
+    banner only appears for the person who clicked next
+    only leader can click next
+    not only press enter to submit
+    cannot spam next
 */
 
 //todo ------------ "global" ------------ //
@@ -269,6 +273,9 @@ function moveCircleTo(row, col, isFromJs) {
 
 // click next button to show coloured banners 
 function goNext(element, event) {
+    if (!isLeader) {
+        return;
+    }
     event.stopPropagation();
 
     banners.forEach(banner => {
@@ -439,7 +446,7 @@ function sendMessage(header, body) {
     } 
 }
 
-const socket = new WebSocket("ws://localhost:8080");
+const socket = new WebSocket("ws://192.168.1.12:8080");
 const myId = localStorage.getItem("rbw_id") ?? genRandomString(32);
 const callbacks = new Map();
 
@@ -546,7 +553,7 @@ callbacks.set("players", ({ info, leaderId }) => {
         const pDeltaDiv = document.createElement("div");
         pDeltaDiv.classList.add("pDelta");
         if (!value.isNew) {
-            pDeltaDiv.textContent = `(${value.deltaScore})`;
+            pDeltaDiv.textContent = `(+${value.deltaScore})`;
         }
 
         pScoreAndDeltaDiv.appendChild(pScoreDiv);

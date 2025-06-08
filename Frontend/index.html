@@ -12,7 +12,808 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <style>
+    :root {
+    --grey: rgb(100, 100, 100);
+    --lgrey: rgb(75, 75, 75);
+    --bgGrey: rgb(33, 33, 33);
+    --theme: 50, 200, 250;
+    --sSize: 2.25vh;
+    --mSize: 3.25vh;
+    --lSize: 10vh;
+    --botPadding: 4px;
+    --green: 25, 150, 50;
+    --red: 150, 25, 50;
+}
+
+body {
+    background-color: var(--bgGrey);
+    color: whitesmoke;
+    font-family: "Quantico";
+    font-size: var(--mSize);
+    margin: 0vh;
+    height: 100vh;
+}
+
+/** answering **/
+
+.topRow {
+    display: flex;
+    /* min-height: 100px; */
+    justify-content: space-between;
+    align-items: center;
+    gap: 2.5vh;
+    padding: 2.5vh;
+    padding-left: 6.25vh;
+    padding-right: 6.25vh;
+    position: sticky;
+    top: 0vh;
+    background-color: var(--bgGrey);
+    /* border: 0.25vh solid white; */
+    z-index: 10;
+}
+
+#bigLetter {
+    font-size: var(--lSize);
+    border: 0.25vh dashed var(--grey);
+    border-radius: 100%;
+    padding-right: 4.375vh;
+    padding-left: 4.375vh;
+    /* margin-left: 0vh; */
+    /* font-family: "Doto"; */
+}
+
+#colon {
+    color: var(--grey);
+}
+
+#stopwatch {
+    padding-right: 2vh;
+    font-size: 3vh;
+    color: rgba(var(--theme), 0.75);
+}
+
+#instructions {
+    border-bottom: 0.25vh solid var(--grey);
+    border-top: 0.25vh solid var(--grey);
+    /* font-size: 25px; */
+    /* font-style: bold; */
+    /* font-family: "Doto"; */
+    /* margin-left: -20%; */
+    padding: 1.5vh;
+    padding-left: 6.25vh;
+    /* margin: 8px; */
+    margin-left: 0vh;
+    margin-right: 0vh;
+    font-size: var(--sSize);
+    color: var(--grey);
+    position: sticky;
+    top: 19.8vh;
+    background-color: var(--bgGrey);
+    /* border: 0.25vh solid white; */
+    z-index: 9;
+}
+
+.bottomColumn {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* padding-top: 2.5vh; */
+    /* padding-bottom: -20px; */
+    margin-top: 2vh;
+    /* margin-bottom: 2.5vh; */
+    border-bottom: 0.25vh solid var(--lgrey);
+    /* text-align: center; */
+    /* position: relative; */
+    padding-left: 2.5vh;
+    padding-right: 2.8vh;
+}
+
+.qNumber {
+    /* flex-grow: 1; */
+    /* margin-left: 2.5vh; */
+    font-size: var(--sSize);
+    color: var(--grey);
+    /* margin-left: -10%; */
+    /* border: 3px solid white; */
+    max-width: 6.25vh;
+    padding-bottom: var(--botPadding);
+}
+
+.qContent {
+    /* flex-grow: 1; */
+    /* margin-left: -300px; */
+    /* margin-left: -20%; */
+    padding-bottom: var(--botPadding);
+}
+
+.qInput {
+    /* margin-right: 2.5vh; */
+    padding-left: 1.5vh;
+    /* margin-left: 5vh; */
+    /* flex-grow: 1; */
+    width: 85vh;
+    height: 5vh;
+    background-color: rgba(75, 75, 75, 0.5);
+    padding-bottom: var(--botPadding);
+    text-overflow: clip;
+    white-space: nowrap;
+    overflow: hidden;
+    outline: none;
+    position: relative;
+    z-index: 1;
+    caret-color: rgba(var(--theme), 0.75);
+    caret-shape:underscore;
+}
+
+::selection {
+    background-color: rgba(var(--theme), 0.5);
+}
+
+.qInput.valid {
+    background-color: rgba(0, 175, 0, 0.25);
+}
+
+.qInput.invalid {
+    background-color: rgba(175, 0, 0, 0.25);
+}
+
+.qInput::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 0.25vh;
+    background-color: rgb(var(--theme));
+    width: 100%;
+    transform: scaleX(0);
+    transform-origin: left; /* grows from left to right */
+    transition: transform 0.25s ease-in-out;
+}
+
+.qInput:focus::after {
+  transform: scaleX(1); /* full width */
+  transform-origin: left; /* growth from left */
+}
+
+.break {
+    color: var(--bgGrey);
+    font-size: 3px;
+}
+
+.numAndContent {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    gap: 3vh;
+}
+
+/** voting **/
+
+.outOf {
+    display: flex;
+    /* min-height: 100px; */
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.04vh;
+}
+
+#next {
+    font-size: var(--sSize);
+    border: 0.25vh solid var(--lgrey);
+    border-radius: 50%;
+    height: 12vh;
+    width: 12vh;
+    text-align: center;
+    align-content: center;
+    cursor: pointer;
+    transition: box-shadow 0.5s ease, transform 0.5s ease;
+}
+
+#next:hover {
+    box-shadow: 0vh 0vh 3vh rgba(var(--theme), 0.5);
+}
+
+#next:active {
+    box-shadow: 0vh 0vh 3vh rgba(var(--theme), 1);
+}
+
+@keyframes pulse {
+    50% {
+        transform: scale(0.8);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+#bigQNum {
+    font-size: var(--lSize);
+}
+
+#smallQNum {
+    font-size: var(--sSize);
+    color: var(--grey);
+}
+
+#bigQContent {
+    font-size: var(--mSize);
+}
+
+.line {
+    height: 0vh;
+    border-top: 0.6vh double var(--lgrey);
+    /* padding-top: 5vh; */
+}
+
+.answer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    font-size: var(--sSize);
+    gap: 45vh;
+    padding-left: 7vh;
+    padding-right: 7vh;
+    padding-top: 3vh;
+    padding-bottom: 3vh;
+    /* padding: 3vh; */
+    border-bottom: 0.1vh solid var(--lgrey);
+    overflow: hidden;
+    position: relative;
+}
+
+.banner {
+    position: absolute;
+    background-color: rgba(var(--red), 0.75);
+    inset: 0% 0% 0% 0%;
+    z-index: 5;
+    text-align: center;
+    align-content: center;
+    height: 100%;
+    width: 100%;
+    font-size: var(--mSize);
+    overflow: hidden;
+    display: none;
+}
+
+.banner.correct {
+    background-color: rgba(var(--green), 0.75);
+}
+
+@keyframes bannerPop {
+  0% {
+    top: 100%;
+  }
+  30% {
+    top: 0%;
+  }
+  70% {
+    top: 0%;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+.aLeft {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 7vh;
+    position: relative;
+}
+
+.aRight {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5.5vh;
+    position: relative;
+    /* width: 60vh; */
+}
+
+.aPoints {
+    color: rgb(var(--red));
+    width: 5.5vh;
+    /* padding-left: 3vh; */
+    text-align: right;
+}
+
+.aPoints.correct {
+    color: rgb(var(--green));
+}
+
+.aAnswered {
+    color: var(--grey);
+    width: 5.5vh;
+    text-align: right;
+}
+
+.aContent {
+    color: rgba(var(--theme), 0.75);
+}
+
+.aName {
+    /* content: "Kemalism:"; */
+    /* color: rgba(var(--theme), 0.67); */
+    color: whitesmoke;
+    padding-right: 2vh;
+}
+
+.aLeftmost {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5vh;
+}
+
+.vote {
+    width: 3vh;
+    z-index: 2;
+    cursor: pointer;
+    /* text-align: center; */
+}
+
+.circle {
+    position: absolute;
+    border-radius: 50%;
+    width: 0vh;
+    height: 0vh;
+    z-index: 1;
+    transform: translateX(-50%);
+    box-shadow: 0 0 2vh red
+}
+
+.circle.correct {
+    box-shadow: 0 0 2vh green;
+}
+
+.yourAnswer {
+    color: var(--lgrey);
+}
+
+/** home **/
+
+.division {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 70vh;
+    padding: 15vh;
+    /* gap: 5vw; */
+}
+
+.section {
+    border: 0.2vh solid var(--lgrey);
+    border-radius: 7vh;
+    width: 30vw;
+    padding: 8vh;
+    height: 75vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* border: 1px solid white; */
+}
+
+.pText {
+    /* padding-bottom: 4vh; */
+    color: var(--grey);
+    font-weight: bold;
+}
+
+.player {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--sSize);
+    height: 5vh;
+}
+
+.pName {
+  white-space: nowrap;         /* prevent wrapping */
+  overflow: hidden;            /* hide overflowed text */
+  text-overflow: ellipsis;     /* add ellipsis (…) at end */
+  max-width: 50%;             /* or any specific width */
+}
+
+.host.you::after {
+    content: "👑 🙋‍♂️";
+    padding-left: 1.75vh;
+}
+
+.host::after {
+    content: "👑";
+    padding-left: 1.75vh;
+}
+
+.you::after {
+    content: "🙋‍♂️";
+    padding-left: 1.75vh;
+}
+
+.mostImproved.highest::before {
+    content: "🔥 🏅";
+    padding-right: 1.75vh;
+}
+
+.highest::before {
+    content: "🏆";
+    padding-right: 1.75vh;
+}
+
+.mostImproved::before {
+    content: "🔥";
+    padding-right: 1.75vh;
+}
+
+.pScoreAndDelta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2vh;
+}
+
+.pDelta {
+    color: var(--grey);
+    width: 6vh;
+    text-align: right;
+}
+
+.rename {
+    /* position: absolute; */
+    background-color: var(--lgrey);
+    border-radius: 2vh;
+    cursor: pointer;
+    text-align: center;
+    /* bottom: 5%; */
+    /* left: 50%; */
+    /* transform: translateX(-50%); */
+    /* width: 100%; */
+    font-size: var(--sSize);
+    height: 4vh;
+    align-content: center;
+    /* margin: 1vh; */    
+    transition: box-shadow 0.5s ease, background-color 0.25s ease, transform 0.5s ease;
+}
+
+.rename:hover {
+    box-shadow: 0vh 0vh 3vh rgba(var(--theme), 0.67);
+    transform: scale(1.07);
+    background-color: rgba(var(--theme), 0.33);
+}
+
+.rename:active {
+    background-color:rgba(var(--theme), 0.67);
+}
+
+.cText {
+    /* padding-bottom: 4vh; */
+    color: var(--grey);
+    font-weight: bold;
+}
+
+.middleColumn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2vh;
+    /* flex-grow: 1; */
+    /* border: 1px solid white; */
+}
+
+.setting {
+    font-size: var(--sSize);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 5vh;
+    /* position: relative; */
+}
+
+.sName i {
+    /* /* content: " "; */
+    padding-right: 2vh;
+    /* height: 0.01vh; */
+    font-size: 2.2vh;
+    width: 2.2vh;
+    color: rgba(var(--theme), 0.75);
+    display: inline-block;
+}
+
+.sValue {
+    border: 1px solid var(--lgrey);
+    border-radius: 3vh;
+    width: 12vh;
+    height: 5vh;
+    text-align: right;
+    align-content: center;
+    padding-right: 1vh;
+    cursor: pointer;
+    position: relative;
+    transition: box-shadow 0.5s ease, background-color 0.25s ease;
+}
+
+.sValue:hover {
+    box-shadow: 0vh 0vh 1vh rgba(var(--theme), 0.67);
+}
+
+.sValue:active {
+    box-shadow: 0vh 0vh 2vh rgba(var(--theme), 1);
+}
+
+.sValue::after {
+    content: "▸";
+    padding-left: 0.75vh;
+    padding-right: 0.25vh;
+    color: var(--grey);
+    font-size: 2.25vh;
+    /* transform: rotate(-90deg); */
+    transform: scale(2, 1.5);
+    display: inline-block;
+    /* top: 50%; */
+    /* margin-top: 0.5vh; */
+    /* position: absolute; */
+    transition: transform 0.5s ease;
+}
+
+.sValue.open::after {
+    transform: rotate(90deg) scale(2, 1.5);
+    /* transform: scale(2, 1.5); */
+}
+
+.menu {
+    position: absolute;
+    background-color: var(--lgrey);
+    border-radius: 3vh;
+    left: 50%;
+    width: 103%;
+    text-align: center;
+    transform: translateX(-50%);
+    top: 120%;
+    z-index: 10;
+    gap: 1vh;
+    display: flex;
+    flex-direction: column;
+    /* padding-top: 1vh; */
+    /* padding-bottom: 1vh; */
+    align-items: center;
+    /* justify-items: space-evenly; */
+    height: 0vh;
+    /* overflow: hidden; */
+    /* pointer-events: none; */
+    transition: height 0.5s ease, max-height 0.5s ease;
+    max-height: 0vh;
+    overflow: hidden;
+    cursor: default;
+    /* border: 1px solid var(--grey); */
+}
+
+.menu::-webkit-scrollbar {
+    width: 0px;
+    background: none;
+    position: absolute;
+}
+
+.menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    position: absolute;
+}
+
+.option {
+    width: 75%;
+    align-content: center;
+    text-align: center;
+    align-self: center;
+    transform: translateX(15%);
+    /* border: 1px solid blue; */
+    border-radius: 3vh;
+    cursor: pointer;
+}
+
+.option:hover {
+    background-color: rgba(var(--theme), 0.5);
+}
+
+#color {
+    /* border-radius: 4vh; */
+    width: 12.5vh;
+    /* margin: 5vh; */
+    /* border-width: 10px; */
+}
+
+#letter::before {
+    content: "Ⓐ";
+    width: 3vh;
+    padding-right: 3vh;
+    color: rgb(var(--theme));
+}
+
+.buttonRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--sSize);
+    gap: 5vh;
+}
+
+.configButton {
+    background-color: var(--lgrey);
+    border-radius: 2vh;
+    height: 4vh;
+    flex-grow: 1;
+    text-align: center;
+    align-content: center;
+    cursor: pointer;
+    transition: box-shadow 0.5s ease, background-color 0.25s ease, transform 0.5s ease;
+}
+
+.configButton:hover {
+    box-shadow: 0vh 0vh 3vh rgba(var(--theme), 0.67);
+    transform: scale(1.07);
+    background-color: rgba(var(--theme), 0.33);
+}
+
+.configButton:active {
+    background-color:rgba(var(--theme), 0.67);
+}
+
+/* Responsive override for phones */
+@media only screen and (max-width: 600px) {
+    :root {
+        --sSize: 2vh;
+        --mSize: 2.75vh;
+        --lSize: 10vh;
+        --botPadding: 4px;
+    }
+
+    /** answering **/
+
+    .topRow {
+        display: flex;
+        /* min-height: 100px; */
+        justify-content: space-between;
+        align-items: center;
+        gap: 2.5vh;
+        padding: 2.5vh;
+        padding-left: 2.25vh;
+        padding-right: 2.25vh;
+        position: sticky;
+        top: 0vh;
+        background-color: var(--bgGrey);
+        /* border: 0.25vh solid white; */
+        z-index: 10;
+    }
+
+    .question {
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        display: flex;
+        margin-top: 2vh;
+        /* margin-bottom: 2.5vh; */
+        border-bottom: 0.25vh solid var(--lgrey);
+    }
+
+    .numAndContent {
+        justify-content: flex-start;
+        align-items: center;
+        display: flex;
+        gap: 3vh;
+    }
+
+    .qInput {
+        /* margin-right: 2.5vh; */
+        padding-left: 1.5vh;
+        margin-left: 12%;
+        /* flex-grow: 1; */
+        /* max-width: 20vh; */
+        width: 78%;
+        height: 5vh;
+        background-color: rgb(50, 50, 50);
+        padding-bottom: var(--botPadding);
+        text-overflow: clip;
+        white-space: nowrap;
+        overflow: hidden;
+        outline: none;
+        position: relative;
+        z-index: 1;
+    }
+
+    /** voting **/
+
+    .answer {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: stretch;
+        font-size: var(--sSize);
+        gap: 3vh;
+        padding-left: 3vh;
+        padding-right: 3vh;
+        padding-top: 3vh;
+        padding-bottom: 3vh;
+        /* padding: 3vh; */
+        border-bottom: 0.1vh solid var(--lgrey);
+        position: relative;
+    }
+
+    .aRight {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 3vh;
+        position: relative;
+        /* left: 50%; */
+    }
+
+    #next {
+        font-size: var(--sSize);
+        border: 0.25vh solid var(--lgrey);
+        border-radius: 50%;
+        height: 8vh;
+        width: 10vh;
+        text-align: center;
+        align-content: center;
+        cursor: pointer;
+        margin-left: 2vh;
+        padding: 2vh;
+        transition: box-shadow 0.5s ease, transform 0.5s ease;
+    }
+
+    #next:hover {
+        box-shadow: 0vh 0vh 3vh rgba(var(--theme), 0.5);
+    }
+
+    #next:active {
+        box-shadow: 0vh 0vh 3vh rgba(var(--theme), 1);
+    }
     
+    /** home **/
+
+    .division {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        /* height: 70vh; */
+        padding: 5vh;
+        gap: 3vh;
+        margin: 0vh;
+    }
+    
+    .section {
+        width: 40vh;
+        gap: 5vh;
+        /* color: red; */
+        /* flex-grow: 1; */
+        border: 0.2vh solid var(--lgrey);
+        /* border-radius: 10%; */
+        /* width: 30vw; */
+        padding: 3vh;
+        /* height: 75vh; */
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        /* border: 1px solid white; */
+    }
+
+    .middleColumn {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1vh;
+        /* flex-grow: 1; */
+        /* border: 1px solid white; */
+    }
+}
   </style>
   <body>
     <div id="answering" style="display: none">
@@ -189,5 +990,830 @@
       <div class="rename" id="rename">Rename Player</div>
     </div>
   </body>
-  <script src="index.js"></script>
+  <script>
+    //todo ------------ actual todos ------------ //
+
+/*
+    hard mode where you can only use each word once
+    [done] enter to go to next wrong/empty input
+    if you minimise voting circle when it's red, it will be red when u maximise it somewhere else
+    refreshing questions page will reload user input (can just save words and validate all of them)
+    bug where unselecting answer doesnt update total score
+*/
+
+//todo ------------ "global" ------------ //
+
+const isPhone = window.matchMedia("only screen and (max-width: 600px)").matches;
+
+//todo ------------ answering ------------ //
+
+let chosenType = 0; // 0 => == 0 => type 1, == 1 => type 2
+let chosenLetterType = 0; // % 3 != 0 => start with, % 3 == 0 => contain but not start with
+let chosenLetter = "A";
+
+let inputs = null;
+let chosenAnswers = null;
+let chosenQuestions = null;
+
+// focus caret at end instead of start of line
+function focusAtEnd(element) {
+    element.focus();
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    range.collapse(false); // false = to end
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+}
+
+function countChars(str, char) {
+    let count = 0;
+    for (const c of str) {
+        if (c === char) {
+            ++count;
+        }
+    }
+    return count;
+}
+
+function setValidity(isValid, element) {
+    if (isValid) {
+        element.classList.add("valid");
+        element.classList.remove("invalid");
+    } else {
+        element.classList.remove("valid");
+        element.classList.add("invalid");
+    }
+}
+
+function setUnanswered(element) {
+    element.classList.remove("valid");
+    element.classList.remove("invalid");
+}
+
+function checkValidity(element, index) {
+    // remove leading and trailing whitespaces
+    let input = element.textContent;
+    input = input.trim();
+    element.textContent = input;
+    let isValid = true;
+    input = input.toLowerCase(); // but don't override player's answer with lowercase chars
+
+    // skip checking empty word
+    if (input.length == 0) {
+        
+        // set other red answers possibly back to green
+        chosenAnswers[index].identicalIndices.forEach(value => {
+            chosenAnswers[value].identicalIndices.delete(index);
+            if (chosenAnswers[value].identicalIndices.size == 0) {
+                setValidity(true, inputs[value]);
+            }
+        });
+        
+        setUnanswered(element);
+        chosenAnswers[index] = { input: "", answer: "", identicalIndices: new Set() };
+        return;
+    }
+
+    // error checking
+    let answer = input; // don't need new String(input) because...strings are primitives?? wtf?
+    if (chosenType == 0) {
+        if ((chosenLetterType % 3 != 0 && input[0] != chosenLetter) || 
+        (chosenLetterType % 3 == 0 && (input[0] == chosenLetter || !input.includes(chosenLetter)))) {
+            isValid = false;
+        }
+
+    } else {
+        // word must appear at the front or back of the input
+        const word = chosenQuestions[index];
+        const indexOfWord = input.indexOf(word);
+        if (indexOfWord == -1 || input.length == word.length || // word or non-word input doesn't exist
+            (indexOfWord != 0 && indexOfWord != input.length - word.length)) { // word not at front and back of input
+            isValid = false;
+        }
+
+        // input without word must not have spaces and must include the letter
+        if (isValid) {
+            answer = indexOfWord == 0 ? input.substring(word.length) : input.substring(0, input.length - word.length);
+            answer = answer.trim();
+            if (!answer.includes(chosenLetter) || answer.includes(" ")) {
+                isValid = false;
+            }
+        }
+    }
+
+    const identicalIndices = chosenAnswers[index].identicalIndices;
+    chosenAnswers.forEach((otherAnswer, otherIndex) => {
+        if (otherAnswer.answer.length == 0 || index == otherIndex) {
+            return;
+        }
+
+        // not self and same answer
+        if (answer == otherAnswer.answer) {
+            setValidity(false, inputs[otherIndex]);
+            identicalIndices.add(otherIndex);
+            chosenAnswers[otherIndex].identicalIndices.add(index);
+
+        // different answer and used to be same
+        } else if (answer != otherAnswer.answer && identicalIndices.has(otherIndex)) {
+            identicalIndices.delete(otherIndex);
+            chosenAnswers[otherIndex].identicalIndices.delete(index);
+            
+            if (chosenAnswers[otherIndex].identicalIndices.size == 0) {
+                setValidity(true, inputs[otherIndex]);
+            }
+        }
+    });
+
+    // answers.forEach((a, i) => {
+    //     console.log(`${i}: ${a.identicalIndices.size}`);
+    //     a.identicalIndices.forEach(elem => {
+    //         console.log(elem);
+    //     });
+    // });
+
+    if (identicalIndices.size != 0) {
+        isValid = false;
+    }
+
+    setValidity(isValid, element);
+    chosenAnswers[index] = { input, answer, identicalIndices };
+}
+
+// next invalid or unanswered question, if any, to jump to when enter is pressed (tab will cycle between questions and arrow keys are self explanatory)
+function findNextIndex(currIndex) {
+    let newIndex = (currIndex + 1) % inputs.length; 
+    while (true) {
+
+        // no incomplete or invalid answers
+        if (newIndex == currIndex) {
+            return (newIndex + 1) % inputs.length;
+        }
+
+        // invalid or incomplete answer
+        if (!inputs[newIndex].classList.contains("valid")) {
+            return newIndex;
+        }
+
+        newIndex = (newIndex + 1) % inputs.length;
+    }
+}
+
+function saveAllInputs() {
+    const toSave = [];
+    inputs.forEach(div => {
+        toSave.push(div.textContent);
+    });
+    localStorage.setItem("rbw_inputs", JSON.stringify(toSave));
+}
+
+function addEventListenersAnswering() {
+    
+    // wtf .fill() fills them up with references, i swear why the fuck can't languages be explicit as to whether something is a reference like goated cpp
+    // answer only used for type 2 for bracket and similarity check (if type 1, input == answer)
+    inputs = document.querySelectorAll(".qInput");
+    chosenAnswers = Array.from({ length: inputs.length }, () => ({ input: "", answer: "", identicalIndices: new Set() }));
+
+    const savedInputs = JSON.parse(localStorage.getItem("rbw_inputs"));
+    if (savedInputs != null) {
+        savedInputs.forEach((input, index) => {
+            inputs[index].textContent = input;
+            checkValidity(inputs[index], index);
+        });
+    }
+
+    // input override for enter, tab, up arrow, down arrow
+    inputs.forEach((element, index) => {
+        element.addEventListener("keydown", event => {
+            if (event.key == "Enter" || event.key == "Tab") {
+                event.preventDefault();
+                focusAtEnd(inputs[findNextIndex(index)]);
+                checkValidity(element, index);
+                saveAllInputs();
+    
+            } else if (event.key == "ArrowDown") {
+                event.preventDefault();
+                focusAtEnd(inputs[index == inputs.length - 1 ? 0 : index + 1]);
+                checkValidity(element, index);
+                saveAllInputs();
+    
+            } else if (event.key == "ArrowUp") {
+                event.preventDefault();
+                focusAtEnd(inputs[index == 0 ? inputs.length - 1 : index - 1]);
+                checkValidity(element, index);
+                saveAllInputs();
+
+            }
+        });
+    });
+}
+
+//todo ------------ voting ------------ //
+
+let circles = null;
+let banners = null;
+let selection = null;
+let scores = null;
+let voteCounts = null;
+let numPlayers = 0;
+let yourAnswer = -1;
+
+// isFromJs == true => called by javascript (when player refreshes page and receives answers)
+function moveCircleTo(row, col, isFromJs) {
+
+    // account for offset in circle index because "your answer" row has no circle
+    const pseudoRow = yourAnswer != -1 && row > yourAnswer ? row - 1 : row;
+    
+    // appear
+    if (selection[row] == -1 || isFromJs) {
+        circles[pseudoRow].style.width = "6vh";
+        circles[pseudoRow].style.height = "6vh";
+        circles[pseudoRow].style.transition = "box-shadow 0.5s ease, width 0.35s ease-in, height 0.35s ease-in, border-width 0.5s linear";
+
+    // disappear
+    } else if (col == selection[row]) {
+        selection[row] = -1;
+        circles[pseudoRow].style.width = "0vh";
+        circles[pseudoRow].style.height = "0vh";
+        sendMessage("vote", { id: myId, row, col: selection[row] });
+        return;
+
+    // move
+    } else {
+        circles[pseudoRow].style.transition = "box-shadow 0.5s ease, width 0.35s ease-in, height 0.35s ease-in, border-width 0.5s linear, left 0.5s cubic-bezier(0.8, 0, 0.2, 1)";
+    }
+
+    // set colour depending on value picked
+    if (col < 3) {
+        circles[pseudoRow].classList.remove("correct");
+    } else {
+        circles[pseudoRow].classList.add("correct");
+    }
+
+    if (isPhone) {
+        circles[pseudoRow].style.left = (14 + 12.1 * col) + "%";
+    } else {
+        circles[pseudoRow].style.left = (2 + 14.5 * col) + "%";
+    }
+
+    selection[row] = col;
+    sendMessage("vote", { id: myId, row, col: selection[row] });
+}
+
+// click next button to show coloured banners 
+function goNext(element, event) {
+    event.stopPropagation();
+
+    banners.forEach(banner => {
+        banner.style.display = "block"
+        banner.style.animation = "none";
+        banner.offsetHeight;
+        banner.style.animation = "bannerPop 1.5s ease-out forwards";
+    });
+
+    element.style.animation = "none";
+    element.offsetHeight;
+    element.style.animation = "pulse 0.5s ease-out";
+    
+    if (banners.length == 0) {
+        sendMessage("next", {});
+    } else {
+        setTimeout(() => {
+            sendMessage("next", {});
+        }, 1500);
+    }
+}
+
+function addEventListenersVoting() {
+    circles = document.querySelectorAll(".circle");
+    banners = document.querySelectorAll(".banner");
+    scores = document.querySelectorAll(".aPoints");
+    voteCounts = document.querySelectorAll(".aAnswered");
+}
+
+//todo ------------ home ------------ //
+
+// fixed number of elements
+const configArrows = document.querySelectorAll(".sValue");
+const configMenus = document.querySelectorAll(".menu");
+const configValues = Array(5).fill(0);
+const menuIsClicked = Array(5).fill(false);
+const configOptions = []; // list of lists of dom elements
+
+function closeMenu(index) {
+    configMenus[index].style.height = "0vh";
+    configMenus[index].style.maxHeight = "0vh";
+    configMenus[index].style.overflow = "hidden";
+}
+
+// thanks jippity
+function hexToRgb(hex) {
+    hex = hex.replace(/^#/, "");
+    if (hex.length === 3) {
+        hex = hex.split("").map(h => h + h).join("");
+    }
+
+    const num = parseInt(hex, 16);
+    return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255
+    };
+}
+
+// colour input
+document.getElementById("color").addEventListener("input", event => {
+    const rgb = hexToRgb(event.target.value);
+    theme = event.target.value;
+    document.documentElement.style.setProperty("--theme", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+});
+
+// save color to local storage
+document.getElementById("color").addEventListener("blur", _ => {
+    localStorage.setItem("rbw_theme", theme);
+});
+
+// initialise configOptions
+configMenus.forEach(menu => {
+    const options = [];
+    menu.querySelectorAll(".option").forEach(option => {
+        options.push(option);
+    });
+    configOptions.push(options);
+});
+
+// click option to select it and close associated menu
+// row refers to config type, column refers to config option
+configOptions.forEach((config, row) => {
+    config.forEach((element, column) => {
+        element.addEventListener("click", () => {
+            // configArrows[index].childNodes[0].textContent = element.textContent + " ";
+            closeMenu(row);
+            sendMessage("config", { row, column });
+        });
+    });
+});
+
+// press dropdown arrow to expand context menu
+configArrows.forEach((element, index) => {
+    element.addEventListener("click", () => {
+        if (menuIsClicked[index]) {
+            closeMenu(index);
+            element.classList.remove("open");
+
+        } else {
+            // close every menu when opening a new menu
+            for (let i = 0; i < configMenus.length; ++i) {
+                closeMenu(i);
+                menuIsClicked[i] = false;
+            }
+
+            // Temporarily set height to 'auto' to measure full height
+            configMenus[index].style.display = "block"; // if it's hidden initially
+            configMenus[index].style.height = "auto";
+            // configMenus[index].style.paddingTop = "1vh";
+            // configMenus[index].style.paddingBottom = "0vh";
+
+            const fullHeight = configMenus[index].scrollHeight + "px";
+
+            // Set back to 0, then animate to fullHeight
+            configMenus[index].style.height = "0px";
+            configMenus[index].offsetHeight; // force reflow
+
+            configMenus[index].style.height = fullHeight;
+            configMenus[index].style.maxHeight = "30vh";
+
+            setTimeout(() => {
+                configMenus[index].style.overflow = "auto";
+            }, 500);
+
+            element.classList.add("open");
+        }
+
+        menuIsClicked[index] = !menuIsClicked[index];
+    });
+});
+
+// rename button
+document.getElementById("rename").addEventListener("click", _ => {
+    username = prompt("Enter your username: ");
+    sendMessage("rename", { username, id: myId });
+    localStorage.setItem("rbw_username", username);
+});
+
+// reset button
+document.getElementById("resetGame").addEventListener("click", _ => {
+    sendMessage("reset", {});
+    localStorage.setItem("rbw_score", 0);
+});
+
+// start button
+document.getElementById("startGame").addEventListener("click", _ => {
+    sendMessage("transit", { to: 1 });
+});
+
+//todo ------------ server logic ------------ //
+
+function genRandomString(length) {
+    const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+        result += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return result;
+}
+
+function sendMessage(header, body) {
+    if (isConnected) {
+        console.log(`sent: ${header}`);
+        socket.send(JSON.stringify({ header, body }));
+    } else {
+        console.warn(`attempted to send "${header}" while disconnected`);
+    } 
+}
+
+const socket = new WebSocket("ws://192.168.1.12:8080");
+const myId = localStorage.getItem("rbw_id") ?? genRandomString(32);
+const callbacks = new Map();
+
+let username = localStorage.getItem("rbw_username") ?? "New Player";
+let score = localStorage.getItem("rbw_score") ?? 0;
+let deltaScore = localStorage.getItem("rbw_deltaScore") ?? 0;
+let theme = localStorage.getItem("rbw_theme") ?? "#32C8FA";
+
+let isLeader = false;
+let isConnected = false; // check if socket is open before sending message
+
+localStorage.setItem("rbw_id", myId);
+
+{
+    let rgb = hexToRgb(theme);
+    document.documentElement.style.setProperty("--theme", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+}
+
+document.getElementById("color").value = theme;
+
+socket.addEventListener("open", () => {
+
+    // join server
+    isConnected = true;
+    sendMessage("enter", { id: myId, username, score, deltaScore });
+});
+
+socket.addEventListener("message", message => {
+    const msg = JSON.parse(message.data);
+    console.log(`received: ${msg.header}`);
+    callbacks.get(msg.header)(msg.body);
+});
+
+/*
+    <div class="player">
+    <div class="pName">Shishamo</div>
+    <div class="pScoreAndDelta">
+        <div class="pScore">5</div>
+        <div class="pDelta"></div>
+    </div>
+    </div>
+*/
+
+// receive player list
+callbacks.set("players", ({ info, leaderId }) => {
+    const players = new Map(info);
+    let highestScore = 0;
+    let mostImprovedScore = 0;
+
+    // find highest score and most improved score
+    players.forEach((value, key) => {
+        highestScore = value.score > highestScore ? value.score : highestScore;
+        mostImprovedScore = value.deltaScore > mostImprovedScore ? value.deltaScore : mostImprovedScore;
+    });
+    
+    // redraw player list
+    const parentDiv = document.getElementById("players");
+    parentDiv.innerHTML = "";
+
+    // set self to leader
+    if (leaderId == myId) {
+        isLeader = true;
+        document.getElementById("startGame").style.display = "block";
+        document.getElementById("resetGame").style.display = "block";
+
+    // hide buttons if not leader
+    } else {
+        isLeader = false;
+        document.getElementById("startGame").style.display = "none";
+        document.getElementById("resetGame").style.display = "none";
+    }
+
+    // key: id, value: { username, score, deltaScore, isNew }
+    players.forEach((value, key) => {
+    
+        const playerDiv = document.createElement("div");
+        playerDiv.classList.add("player");
+    
+        const pNameDiv = document.createElement("div");
+        pNameDiv.classList.add("pName");
+        pNameDiv.textContent = value.username;
+
+        if (myId == key) {
+            pNameDiv.classList.add("you");
+        }
+        if (key == leaderId) {
+            pNameDiv.classList.add("host");
+        }
+
+        const pScoreAndDeltaDiv = document.createElement("div");
+        pScoreAndDeltaDiv.classList.add("pScoreAndDelta");
+
+        const pScoreDiv = document.createElement("div");
+        pScoreDiv.classList.add("pScore");
+        pScoreDiv.textContent = value.score;
+        
+        if (value.score == highestScore && !value.isNew) {
+            pScoreDiv.classList.add("highest");
+        }
+        if (value.deltaScore == mostImprovedScore && !value.isNew) {
+            pScoreDiv.classList.add("mostImproved");
+        }
+
+        const pDeltaDiv = document.createElement("div");
+        pDeltaDiv.classList.add("pDelta");
+        if (!value.isNew) {
+            pDeltaDiv.textContent = `(+${value.deltaScore})`;
+        }
+
+        pScoreAndDeltaDiv.appendChild(pScoreDiv);
+        pScoreAndDeltaDiv.appendChild(pDeltaDiv);
+
+        playerDiv.appendChild(pNameDiv);
+        playerDiv.appendChild(pScoreAndDeltaDiv);
+
+        parentDiv.appendChild(playerDiv);
+    });
+});
+
+// receive changed config
+callbacks.set("config", ({ values }) => {
+    console.log(values);
+    values.forEach((column, row) => {
+        configArrows[row].childNodes[0].textContent = configOptions[row][column].textContent + " ";
+    });
+});
+
+// received signal to change phase
+callbacks.set("transit", ({ to }) => {
+    const homeDiv = document.getElementById("home");
+    const answeringDiv = document.getElementById("answering");
+    const votingDiv = document.getElementById("voting");
+
+    switch (to) {
+        // home page
+        case 0:
+            answeringDiv.style.display = "none";
+            votingDiv.style.display = "none";
+            homeDiv.style.display = "block";
+            localStorage.removeItem("rbw_inputs");
+            // sendMessage("players config", { id });
+            break;
+
+        // answering page
+        case 1:
+            homeDiv.style.display = "none";
+            votingDiv.style.display = "none";
+            answeringDiv.style.display = "block";
+            // sendMessage("questions", { id });
+            break;
+
+        // voting page
+        case 2:
+            homeDiv.style.display = "none";
+            answeringDiv.style.display = "none";
+            votingDiv.style.display = "block";
+            // sendMessage("answers selected votes", { id });
+            break;
+    }
+});
+
+/*
+    <div class="question">
+        <div class="numAndContent">
+            <div class="qNumber">01</div>
+            <div class="qContent">head</div>
+        </div>
+        <div class="qInput" contenteditable="true" tabindex="0"></div>
+    </div>
+*/
+
+callbacks.set("questions", ({ questions, letter, letterType, type }) => {
+    chosenLetter = letter.toLowerCase();
+    chosenLetterType = letterType;
+    chosenType = type;
+    chosenQuestions = questions;
+
+    // set letter and instructions
+    document.getElementById("bigLetter").textContent = letter;
+    document.getElementById("instructions").textContent = "Please enter words or phrases that " +
+        (type == 0
+        ? (letterType % 3 == 0
+        ? "contains but not start with"
+        : "start with")
+        : "contains")
+        + " the letter \"" + letter + "\".";
+
+    const parentDiv = document.getElementById("questions");
+    parentDiv.innerHTML = "";
+
+    // set questions
+    questions.forEach((question, index) => {
+        const questionDiv = document.createElement("div");
+        questionDiv.classList.add("question");
+
+        const numAndContentDiv = document.createElement("div");
+        numAndContentDiv.classList.add("numAndContent");
+
+        const qNumberDiv = document.createElement("div");
+        qNumberDiv.classList.add("qNumber");
+        qNumberDiv.textContent = String(index + 1).padStart(2, "0");
+
+        const qContentDiv = document.createElement("div");
+        qContentDiv.classList.add("qContent");
+        qContentDiv.textContent = question;
+
+        const qInputDiv = document.createElement("div");
+        qInputDiv.classList.add("qInput");
+        qInputDiv.contentEditable = true;
+
+        numAndContentDiv.appendChild(qNumberDiv);
+        numAndContentDiv.appendChild(qContentDiv);
+
+        questionDiv.appendChild(numAndContentDiv);
+        questionDiv.appendChild(qInputDiv);
+
+        parentDiv.appendChild(questionDiv);
+    });
+
+    addEventListenersAnswering();
+});
+
+/*
+    <div class="answer">
+        <div class="banner correct">+1</div>
+        <div> <-- aContentDiv
+            <span class="aName">Kemalism:</span>knitting ability is a very long word or phrase
+        </div>
+        <div class="aRight">
+            <div class="vote" onclick="moveCircleTo(0, 0)">-2</div>
+            <div class="vote" onclick="moveCircleTo(0, 1)">-1</div>
+            <div class="vote" onclick="moveCircleTo(0, 2)">-0</div>
+            <div class="vote correct" onclick="moveCircleTo(0, 3)">+1</div>
+            <div class="vote correct" onclick="moveCircleTo(0, 4)">+2</div>
+            <div class="circle"></div>
+            <div class="aPoints correct">+40</div>
+            <div class="aAnswered">2/30</div>
+        </div>
+    </div>
+*/
+
+// answers = array of { input, answer, votes, score, id, username }
+callbacks.set("answers", ({ question, number, answerCount, playerCount, shldShowUsername, answers, selectedOptions }) => {
+
+    // set question number and content
+    document.getElementById("bigQNum").textContent = number + 1;
+    document.getElementById("smallQNum").textContent = `of ${answerCount}`;
+    document.getElementById("bigQContent").textContent = question;
+
+    const parentDiv = document.getElementById("answers");
+    parentDiv.innerHTML = "";
+    yourAnswer = -1;
+
+    selection = new Map(selectedOptions).get(myId);
+    numPlayers = playerCount;
+    console.log("playerCount: " + playerCount);
+    const toClick = []; // vector of { row, col }
+
+    // render all answers
+    answers.forEach(({ input, answer, votes, score, id, username }, index) => {
+        const answerDiv = document.createElement("div");
+        answerDiv.classList.add("answer");
+
+        const bannerDiv = document.createElement("div");
+        bannerDiv.classList.add("banner");
+        bannerDiv.textContent = "+0";
+
+        const aContentDiv = document.createElement("div");
+        aContentDiv.classList.add("aContent");
+
+        if (shldShowUsername) {
+            const aNameSpan = document.createElement("span");
+            aNameSpan.classList.add("aName");
+            aNameSpan.textContent = `${username}:`;
+            aContentDiv.appendChild(aNameSpan);
+        }
+
+        // answer content varies between type 1 & 2
+        aContentDiv.appendChild(document.createTextNode(input == answer ? input : `${input} (${answer})`));
+        
+        const aRightDiv = document.createElement("div");
+        aRightDiv.classList.add("aRight");
+
+        if (id == myId) {
+            const yourAnswerDiv = document.createElement("div");
+            yourAnswerDiv.classList.add("yourAnswer");
+            yourAnswerDiv.textContent = "YOUR ANSWER";
+
+            aRightDiv.appendChild(yourAnswerDiv);
+            yourAnswer = index;
+
+        } else {
+            
+            // draw -2 to 2 circles
+            // <div class="vote" onclick="moveCircleTo(0, 0)">-2</div>
+            const values = ["-2", "-1", "-0", "+1", "+2"];
+            for (let i = 0; i < 5; ++i) {
+                const voteDiv = document.createElement("div");
+                voteDiv.classList.add("vote");
+                voteDiv.onclick = () => moveCircleTo(index, i, false);
+                voteDiv.textContent = values[i];
+                aRightDiv.appendChild(voteDiv);
+    
+                if (selection[index] == i) {
+                    toClick.push({ row: index, col: i });
+                }
+            }
+    
+            const circleDiv = document.createElement("div");
+            circleDiv.classList.add("circle");
+
+            aRightDiv.appendChild(circleDiv);
+        }
+        
+        const aPointsDiv = document.createElement("div");
+        aPointsDiv.classList.add("aPoints");
+        aPointsDiv.textContent = `${(score < 1 ? "-" : "+")}${Math.abs(score)}`;
+        
+        // by default is red (ie no class == incorrect)
+        if (score > 0) {
+            bannerDiv.classList.add("correct");
+            aPointsDiv.classList.add("correct");
+        }
+        
+        const aAnsweredDiv = document.createElement("div");
+        aAnsweredDiv.classList.add("aAnswered");
+        aAnsweredDiv.textContent = `${votes}/${playerCount - 1}`;
+        
+        aRightDiv.appendChild(aPointsDiv);
+        aRightDiv.appendChild(aAnsweredDiv);
+
+        answerDiv.appendChild(aContentDiv);
+        answerDiv.appendChild(aRightDiv);
+        answerDiv.appendChild(bannerDiv);
+
+        parentDiv.appendChild(answerDiv);
+    });
+
+    addEventListenersVoting();
+
+    toClick.forEach(({ row, col }) => {
+        moveCircleTo(row, col, true);
+    });
+});
+
+callbacks.set("tick", ({ timer }) => {
+    const minutes = Math.floor(timer / 60);
+    const seconds = timer - minutes * 60;
+    document.getElementById("minutes").textContent = String(minutes).padStart(2, "0");
+    document.getElementById("seconds").textContent = String(seconds).padStart(2, "0");
+});
+
+callbacks.set("submit", ({}) => {
+    const submission = [];
+    chosenAnswers.forEach(({ input, answer }, index) => {
+        if (inputs[index].classList.contains("valid")) {
+            submission.push({ input, answer, index });
+        }
+    });
+
+    sendMessage("submit", { id: myId, submission });
+});
+
+callbacks.set("vote", ({ submission }) => {
+
+    // each element in submission = { input, answer, votes, score, id, username }
+    submission.forEach(({ input, answer, votes, score, id, username}, index) => {
+        scores[index].textContent = `${(score < 1 ? "-" : "+")}${Math.abs(score)}`;
+        voteCounts[index].textContent = `${votes}/${numPlayers - 1}`;
+
+        // scores & banners conditional formatting
+        if (score > 0) {
+            scores[index].classList.add("correct");
+            banners[index].classList.add("correct");
+            banners[index].textContent = "+1";
+        } else {
+            scores[index].classList.remove("correct");
+            banners[index].classList.remove("correct");
+            banners[index].textContent = "+0";
+        }
+    });
+});
+  </script>
 </html>

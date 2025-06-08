@@ -4,7 +4,7 @@ const WebSocket = require("ws");
 const fs = require("fs");
 
 // server data
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ host: "0.0.0.0", port: 8080 });
 const players = new Map(); // id (string) to { username, score, deltaScore, isNew }
 const sockets = new Map(); // id to ws
 const dcedPlayers = new Map(); // same as above
@@ -133,6 +133,7 @@ function goNext() {
 
     // award actual points
     if (currQuestion != -1) {
+        console.log(submissions.length);
         submissions[currQuestion].forEach(answer => {
             if (answer.score > 0) {
                 ++players.get(answer.id).score;
@@ -142,8 +143,17 @@ function goNext() {
     }
 
     // last question
-    if (currQuestion == config[2] + 1) {
-        
+    if (currQuestion == config[2]) {
+        phase = 0;
+
+        // players are no longer new so set isNew to false
+        players.forEach((value, key) => {
+            value.isNew = false;
+        });
+
+        sendMessage("transit", { to: phase });
+        sendMessage("players", { info: Array.from(players.entries()), leaderId });
+        sendMessage("config", { values: config });
     }
 
     ++currQuestion;
