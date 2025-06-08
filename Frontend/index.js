@@ -3,22 +3,24 @@
 /*
     hard mode where you can only use each word once
     [done] enter to go to next wrong/empty input
+    if you minimise voting circle when it's red, it will be red when u maximise it somewhere else
+    refreshing questions page will reload user input (can just save words and validate all of them)
+    bug where unselecting answer doesnt update total score
 */
 
-//todo ------------ global ------------ //
+//todo ------------ "global" ------------ //
 
-let gameType = 2;
-let letterType = 2; // 1 => start with, 2 => contain but not start with
-let chosenLetter = "a";
+const isPhone = window.matchMedia("only screen and (max-width: 600px)").matches;
 
 //todo ------------ answering ------------ //
 
-const inputs = document.querySelectorAll(".qInput");
+let chosenType = 0; // 0 => == 0 => type 1, == 1 => type 2
+let chosenLetterType = 0; // % 3 != 0 => start with, % 3 == 0 => contain but not start with
+let chosenLetter = "A";
 
-// wtf .fill() fills them up with references, i swear why the fuck can't languages be explicit as to whether something is a reference like goated cpp
-// answer only used for type 2 for bracket and similarity check (if type 1, input == answer)
-const answers = Array.from({ length: inputs.length }, () => ({ input: "", answer: "", identicalIndices: new Set() })); 
-const questions = document.querySelectorAll(".qContent");
+let inputs = null;
+let chosenAnswers = null;
+let chosenQuestions = null;
 
 // focus caret at end instead of start of line
 function focusAtEnd(element) {
@@ -68,29 +70,29 @@ function checkValidity(element, index) {
     if (input.length == 0) {
         
         // set other red answers possibly back to green
-        answers[index].identicalIndices.forEach(value => {
-            answers[value].identicalIndices.delete(index);
-            if (answers[value].identicalIndices.size == 0) {
+        chosenAnswers[index].identicalIndices.forEach(value => {
+            chosenAnswers[value].identicalIndices.delete(index);
+            if (chosenAnswers[value].identicalIndices.size == 0) {
                 setValidity(true, inputs[value]);
             }
         });
         
         setUnanswered(element);
-        answers[index] = { input: "", answer: "", identicalIndices: new Set() };
+        chosenAnswers[index] = { input: "", answer: "", identicalIndices: new Set() };
         return;
     }
 
     // error checking
     let answer = input; // don't need new String(input) because...strings are primitives?? wtf?
-    if (gameType == 1) {
-        if ((letterType == 1 && input[0] != chosenLetter) || 
-        (letterType == 2 && (input[0] == chosenLetter || !input.includes(chosenLetter)))) {
+    if (chosenType == 0) {
+        if ((chosenLetterType % 3 != 0 && input[0] != chosenLetter) || 
+        (chosenLetterType % 3 == 0 && (input[0] == chosenLetter || !input.includes(chosenLetter)))) {
             isValid = false;
         }
 
     } else {
         // word must appear at the front or back of the input
-        const word = questions[index].textContent;
+        const word = chosenQuestions[index];
         const indexOfWord = input.indexOf(word);
         if (indexOfWord == -1 || input.length == word.length || // word or non-word input doesn't exist
             (indexOfWord != 0 && indexOfWord != input.length - word.length)) { // word not at front and back of input
@@ -107,8 +109,8 @@ function checkValidity(element, index) {
         }
     }
 
-    const identicalIndices = answers[index].identicalIndices;
-    answers.forEach((otherAnswer, otherIndex) => {
+    const identicalIndices = chosenAnswers[index].identicalIndices;
+    chosenAnswers.forEach((otherAnswer, otherIndex) => {
         if (otherAnswer.answer.length == 0 || index == otherIndex) {
             return;
         }
@@ -117,14 +119,14 @@ function checkValidity(element, index) {
         if (answer == otherAnswer.answer) {
             setValidity(false, inputs[otherIndex]);
             identicalIndices.add(otherIndex);
-            answers[otherIndex].identicalIndices.add(index);
+            chosenAnswers[otherIndex].identicalIndices.add(index);
 
         // different answer and used to be same
         } else if (answer != otherAnswer.answer && identicalIndices.has(otherIndex)) {
             identicalIndices.delete(otherIndex);
-            answers[otherIndex].identicalIndices.delete(index);
+            chosenAnswers[otherIndex].identicalIndices.delete(index);
             
-            if (answers[otherIndex].identicalIndices.size == 0) {
+            if (chosenAnswers[otherIndex].identicalIndices.size == 0) {
                 setValidity(true, inputs[otherIndex]);
             }
         }
@@ -142,7 +144,7 @@ function checkValidity(element, index) {
     }
 
     setValidity(isValid, element);
-    answers[index] = { input, answer, identicalIndices };
+    chosenAnswers[index] = { input, answer, identicalIndices };
 }
 
 // next invalid or unanswered question, if any, to jump to when enter is pressed (tab will cycle between questions and arrow keys are self explanatory)
@@ -164,87 +166,137 @@ function findNextIndex(currIndex) {
     }
 }
 
-// input override for enter, tab, up arrow, down arrow
-inputs.forEach((element, index) => {
-    element.addEventListener("keydown", event => {
-        if (event.key == "Enter" || event.key == "Tab") {
-            event.preventDefault();
-            focusAtEnd(inputs[findNextIndex(index)]);
-            checkValidity(element, index);
-
-        } else if (event.key == "ArrowDown") {
-            event.preventDefault();
-            focusAtEnd(inputs[index == inputs.length - 1 ? 0 : index + 1]);
-            checkValidity(element, index);
-
-        } else if (event.key == "ArrowUp") {
-            event.preventDefault();
-            focusAtEnd(inputs[index == 0 ? inputs.length - 1 : index - 1]);
-            checkValidity(element, index);
-        }
+function saveAllInputs() {
+    const toSave = [];
+    inputs.forEach(div => {
+        toSave.push(div.textContent);
     });
-});
+    localStorage.setItem("rbw_inputs", JSON.stringify(toSave));
+}
+
+function addEventListenersAnswering() {
+    
+    // wtf .fill() fills them up with references, i swear why the fuck can't languages be explicit as to whether something is a reference like goated cpp
+    // answer only used for type 2 for bracket and similarity check (if type 1, input == answer)
+    inputs = document.querySelectorAll(".qInput");
+    chosenAnswers = Array.from({ length: inputs.length }, () => ({ input: "", answer: "", identicalIndices: new Set() }));
+
+    const savedInputs = JSON.parse(localStorage.getItem("rbw_inputs"));
+    if (savedInputs != null) {
+        savedInputs.forEach((input, index) => {
+            inputs[index].textContent = input;
+            checkValidity(inputs[index], index);
+        });
+    }
+
+    // input override for enter, tab, up arrow, down arrow
+    inputs.forEach((element, index) => {
+        element.addEventListener("keydown", event => {
+            if (event.key == "Enter" || event.key == "Tab") {
+                event.preventDefault();
+                focusAtEnd(inputs[findNextIndex(index)]);
+                checkValidity(element, index);
+                saveAllInputs();
+    
+            } else if (event.key == "ArrowDown") {
+                event.preventDefault();
+                focusAtEnd(inputs[index == inputs.length - 1 ? 0 : index + 1]);
+                checkValidity(element, index);
+                saveAllInputs();
+    
+            } else if (event.key == "ArrowUp") {
+                event.preventDefault();
+                focusAtEnd(inputs[index == 0 ? inputs.length - 1 : index - 1]);
+                checkValidity(element, index);
+                saveAllInputs();
+
+            }
+        });
+    });
+}
 
 //todo ------------ voting ------------ //
 
-const isPhone = window.matchMedia("only screen and (max-width: 600px)").matches;
+let circles = null;
+let banners = null;
+let selection = null;
+let scores = null;
+let voteCounts = null;
+let numPlayers = 0;
+let yourAnswer = -1;
 
-const circles = document.querySelectorAll(".circle");
-const selection = [];
-circles.forEach(_ => {
-    selection.push(-1);
-})
+// isFromJs == true => called by javascript (when player refreshes page and receives answers)
+function moveCircleTo(row, col, isFromJs) {
 
-const banners = document.querySelectorAll(".banner");
-
-function moveCircleTo(row, col) {
+    // account for offset in circle index because "your answer" row has no circle
+    const pseudoRow = yourAnswer != -1 && row > yourAnswer ? row - 1 : row;
     
     // appear
-    if (selection[row] == -1) {
-        circles[row].style.width = "6vh";
-        circles[row].style.height = "6vh";
-        circles[row].style.transition = "box-shadow 0.5s ease, width 0.35s ease-in, height 0.35s ease-in, border-width 0.5s linear";
+    if (selection[row] == -1 || isFromJs) {
+        circles[pseudoRow].style.width = "6vh";
+        circles[pseudoRow].style.height = "6vh";
+        circles[pseudoRow].style.transition = "box-shadow 0.5s ease, width 0.35s ease-in, height 0.35s ease-in, border-width 0.5s linear";
 
     // disappear
     } else if (col == selection[row]) {
         selection[row] = -1;
-        circles[row].style.width = "0vh";
-        circles[row].style.height = "0vh";
+        circles[pseudoRow].style.width = "0vh";
+        circles[pseudoRow].style.height = "0vh";
+        sendMessage("vote", { id: myId, row, col: selection[row] });
         return;
 
     // move
     } else {
+        circles[pseudoRow].style.transition = "box-shadow 0.5s ease, width 0.35s ease-in, height 0.35s ease-in, border-width 0.5s linear, left 0.5s cubic-bezier(0.8, 0, 0.2, 1)";
+    }
 
-        // set colour depending on value picked
-        if (col < 3) {
-            circles[row].classList.remove("correct");
-        } else {
-            circles[row].classList.add("correct");
-        }
-        
-        circles[row].style.transition = "box-shadow 0.5s ease, width 0.35s ease-in, height 0.35s ease-in, border-width 0.5s linear, left 0.5s cubic-bezier(0.8, 0, 0.2, 1)";
+    // set colour depending on value picked
+    if (col < 3) {
+        circles[pseudoRow].classList.remove("correct");
+    } else {
+        circles[pseudoRow].classList.add("correct");
     }
 
     if (isPhone) {
-        circles[row].style.left = (14 + 12.1 * col) + "%";
+        circles[pseudoRow].style.left = (14 + 12.1 * col) + "%";
     } else {
-        circles[row].style.left = (2.6 + 14.5 * col) + "%";
+        circles[pseudoRow].style.left = (2 + 14.5 * col) + "%";
     }
+
     selection[row] = col;
+    sendMessage("vote", { id: myId, row, col: selection[row] });
 }
 
 // click next button to show coloured banners 
-document.getElementById("next").addEventListener("click", function () { // can't use this in lambda function
+function goNext(element, event) {
+    event.stopPropagation();
+
     banners.forEach(banner => {
+        banner.style.display = "block"
         banner.style.animation = "none";
         banner.offsetHeight;
         banner.style.animation = "bannerPop 1.5s ease-out forwards";
     });
 
-    this.style.animation = "none";
-    this.offsetHeight;
-    this.style.animation = "pulse 0.5s ease-out";
-});
+    element.style.animation = "none";
+    element.offsetHeight;
+    element.style.animation = "pulse 0.5s ease-out";
+    
+    if (banners.length == 0) {
+        sendMessage("next", {});
+    } else {
+        setTimeout(() => {
+            sendMessage("next", {});
+        }, 1500);
+    }
+}
+
+function addEventListenersVoting() {
+    circles = document.querySelectorAll(".circle");
+    banners = document.querySelectorAll(".banner");
+    scores = document.querySelectorAll(".aPoints");
+    voteCounts = document.querySelectorAll(".aAnswered");
+}
 
 //todo ------------ home ------------ //
 
@@ -304,10 +356,7 @@ configOptions.forEach((config, row) => {
         element.addEventListener("click", () => {
             // configArrows[index].childNodes[0].textContent = element.textContent + " ";
             closeMenu(row);
-
-            if (isConnected) {
-                socket.send(JSON.stringify({ header: "config", body: { row, column }}));
-            }
+            sendMessage("config", { row, column });
         });
     });
 });
@@ -354,25 +403,20 @@ configArrows.forEach((element, index) => {
 
 // rename button
 document.getElementById("rename").addEventListener("click", _ => {
-    const username = prompt("Enter your username: ");
-
-    if (isConnected) {
-        socket.send({ header: "rename", body: { username }});
-    }
+    username = prompt("Enter your username: ");
+    sendMessage("rename", { username, id: myId });
+    localStorage.setItem("rbw_username", username);
 });
 
 // reset button
 document.getElementById("resetGame").addEventListener("click", _ => {
-    if (isConnected) {
-        socket.send(JSON.stringify({ header: "reset", body: { }}));
-    }
+    sendMessage("reset", {});
+    localStorage.setItem("rbw_score", 0);
 });
 
 // start button
 document.getElementById("startGame").addEventListener("click", _ => {
-    if (isConnected) {
-        socket.send(JSON.stringify({ header: "transit", body: { to: 1 }}));
-    }
+    sendMessage("transit", { to: 1 });
 });
 
 //todo ------------ server logic ------------ //
@@ -386,16 +430,28 @@ function genRandomString(length) {
     return result;
 }
 
+function sendMessage(header, body) {
+    if (isConnected) {
+        console.log(`sent: ${header}`);
+        socket.send(JSON.stringify({ header, body }));
+    } else {
+        console.warn(`attempted to send "${header}" while disconnected`);
+    } 
+}
+
 const socket = new WebSocket("ws://localhost:8080");
-const id = localStorage.getItem("rbw_id") ?? genRandomString(32);
-const username = localStorage.getItem("rbw_username") ?? "New Player";
-const score = localStorage.getItem("rbw_score") ?? 0;
+const myId = localStorage.getItem("rbw_id") ?? genRandomString(32);
 const callbacks = new Map();
-let isLeader = false;
+
+let username = localStorage.getItem("rbw_username") ?? "New Player";
+let score = localStorage.getItem("rbw_score") ?? 0;
+let deltaScore = localStorage.getItem("rbw_deltaScore") ?? 0;
 let theme = localStorage.getItem("rbw_theme") ?? "#32C8FA";
+
+let isLeader = false;
 let isConnected = false; // check if socket is open before sending message
 
-localStorage.setItem("rbw_id", id);
+localStorage.setItem("rbw_id", myId);
 
 {
     let rgb = hexToRgb(theme);
@@ -407,8 +463,8 @@ document.getElementById("color").value = theme;
 socket.addEventListener("open", () => {
 
     // join server
-    socket.send(JSON.stringify({ header: "enter", body: { id, username, score }}));
     isConnected = true;
+    sendMessage("enter", { id: myId, username, score, deltaScore });
 });
 
 socket.addEventListener("message", message => {
@@ -416,6 +472,16 @@ socket.addEventListener("message", message => {
     console.log(`received: ${msg.header}`);
     callbacks.get(msg.header)(msg.body);
 });
+
+/*
+    <div class="player">
+    <div class="pName">Shishamo</div>
+    <div class="pScoreAndDelta">
+        <div class="pScore">5</div>
+        <div class="pDelta"></div>
+    </div>
+    </div>
+*/
 
 // receive player list
 callbacks.set("players", ({ info, leaderId }) => {
@@ -434,7 +500,7 @@ callbacks.set("players", ({ info, leaderId }) => {
     parentDiv.innerHTML = "";
 
     // set self to leader
-    if (leaderId == id) {
+    if (leaderId == myId) {
         isLeader = true;
         document.getElementById("startGame").style.display = "block";
         document.getElementById("resetGame").style.display = "block";
@@ -456,7 +522,7 @@ callbacks.set("players", ({ info, leaderId }) => {
         pNameDiv.classList.add("pName");
         pNameDiv.textContent = value.username;
 
-        if (id == key) {
+        if (myId == key) {
             pNameDiv.classList.add("you");
         }
         if (key == leaderId) {
@@ -495,7 +561,264 @@ callbacks.set("players", ({ info, leaderId }) => {
 
 // receive changed config
 callbacks.set("config", ({ values }) => {
+    console.log(values);
     values.forEach((column, row) => {
         configArrows[row].childNodes[0].textContent = configOptions[row][column].textContent + " ";
+    });
+});
+
+// received signal to change phase
+callbacks.set("transit", ({ to }) => {
+    const homeDiv = document.getElementById("home");
+    const answeringDiv = document.getElementById("answering");
+    const votingDiv = document.getElementById("voting");
+
+    switch (to) {
+        // home page
+        case 0:
+            answeringDiv.style.display = "none";
+            votingDiv.style.display = "none";
+            homeDiv.style.display = "block";
+            localStorage.removeItem("rbw_inputs");
+            // sendMessage("players config", { id });
+            break;
+
+        // answering page
+        case 1:
+            homeDiv.style.display = "none";
+            votingDiv.style.display = "none";
+            answeringDiv.style.display = "block";
+            // sendMessage("questions", { id });
+            break;
+
+        // voting page
+        case 2:
+            homeDiv.style.display = "none";
+            answeringDiv.style.display = "none";
+            votingDiv.style.display = "block";
+            // sendMessage("answers selected votes", { id });
+            break;
+    }
+});
+
+/*
+    <div class="question">
+        <div class="numAndContent">
+            <div class="qNumber">01</div>
+            <div class="qContent">head</div>
+        </div>
+        <div class="qInput" contenteditable="true" tabindex="0"></div>
+    </div>
+*/
+
+callbacks.set("questions", ({ questions, letter, letterType, type }) => {
+    chosenLetter = letter.toLowerCase();
+    chosenLetterType = letterType;
+    chosenType = type;
+    chosenQuestions = questions;
+
+    // set letter and instructions
+    document.getElementById("bigLetter").textContent = letter;
+    document.getElementById("instructions").textContent = "Please enter words or phrases that " +
+        (type == 0
+        ? (letterType % 3 == 0
+        ? "contains but not start with"
+        : "start with")
+        : "contains")
+        + " the letter \"" + letter + "\".";
+
+    const parentDiv = document.getElementById("questions");
+    parentDiv.innerHTML = "";
+
+    // set questions
+    questions.forEach((question, index) => {
+        const questionDiv = document.createElement("div");
+        questionDiv.classList.add("question");
+
+        const numAndContentDiv = document.createElement("div");
+        numAndContentDiv.classList.add("numAndContent");
+
+        const qNumberDiv = document.createElement("div");
+        qNumberDiv.classList.add("qNumber");
+        qNumberDiv.textContent = String(index + 1).padStart(2, "0");
+
+        const qContentDiv = document.createElement("div");
+        qContentDiv.classList.add("qContent");
+        qContentDiv.textContent = question;
+
+        const qInputDiv = document.createElement("div");
+        qInputDiv.classList.add("qInput");
+        qInputDiv.contentEditable = true;
+
+        numAndContentDiv.appendChild(qNumberDiv);
+        numAndContentDiv.appendChild(qContentDiv);
+
+        questionDiv.appendChild(numAndContentDiv);
+        questionDiv.appendChild(qInputDiv);
+
+        parentDiv.appendChild(questionDiv);
+    });
+
+    addEventListenersAnswering();
+});
+
+/*
+    <div class="answer">
+        <div class="banner correct">+1</div>
+        <div> <-- aContentDiv
+            <span class="aName">Kemalism:</span>knitting ability is a very long word or phrase
+        </div>
+        <div class="aRight">
+            <div class="vote" onclick="moveCircleTo(0, 0)">-2</div>
+            <div class="vote" onclick="moveCircleTo(0, 1)">-1</div>
+            <div class="vote" onclick="moveCircleTo(0, 2)">-0</div>
+            <div class="vote correct" onclick="moveCircleTo(0, 3)">+1</div>
+            <div class="vote correct" onclick="moveCircleTo(0, 4)">+2</div>
+            <div class="circle"></div>
+            <div class="aPoints correct">+40</div>
+            <div class="aAnswered">2/30</div>
+        </div>
+    </div>
+*/
+
+// answers = array of { input, answer, votes, score, id, username }
+callbacks.set("answers", ({ question, number, answerCount, playerCount, shldShowUsername, answers, selectedOptions }) => {
+
+    // set question number and content
+    document.getElementById("bigQNum").textContent = number + 1;
+    document.getElementById("smallQNum").textContent = `of ${answerCount}`;
+    document.getElementById("bigQContent").textContent = question;
+
+    const parentDiv = document.getElementById("answers");
+    parentDiv.innerHTML = "";
+    yourAnswer = -1;
+
+    selection = new Map(selectedOptions).get(myId);
+    numPlayers = playerCount;
+    console.log("playerCount: " + playerCount);
+    const toClick = []; // vector of { row, col }
+
+    // render all answers
+    answers.forEach(({ input, answer, votes, score, id, username }, index) => {
+        const answerDiv = document.createElement("div");
+        answerDiv.classList.add("answer");
+
+        const bannerDiv = document.createElement("div");
+        bannerDiv.classList.add("banner");
+        bannerDiv.textContent = "+0";
+
+        const aContentDiv = document.createElement("div");
+        aContentDiv.classList.add("aContent");
+
+        if (shldShowUsername) {
+            const aNameSpan = document.createElement("span");
+            aNameSpan.classList.add("aName");
+            aNameSpan.textContent = `${username}:`;
+            aContentDiv.appendChild(aNameSpan);
+        }
+
+        // answer content varies between type 1 & 2
+        aContentDiv.appendChild(document.createTextNode(input == answer ? input : `${input} (${answer})`));
+        
+        const aRightDiv = document.createElement("div");
+        aRightDiv.classList.add("aRight");
+
+        if (id == myId) {
+            const yourAnswerDiv = document.createElement("div");
+            yourAnswerDiv.classList.add("yourAnswer");
+            yourAnswerDiv.textContent = "YOUR ANSWER";
+
+            aRightDiv.appendChild(yourAnswerDiv);
+            yourAnswer = index;
+
+        } else {
+            
+            // draw -2 to 2 circles
+            // <div class="vote" onclick="moveCircleTo(0, 0)">-2</div>
+            const values = ["-2", "-1", "-0", "+1", "+2"];
+            for (let i = 0; i < 5; ++i) {
+                const voteDiv = document.createElement("div");
+                voteDiv.classList.add("vote");
+                voteDiv.onclick = () => moveCircleTo(index, i, false);
+                voteDiv.textContent = values[i];
+                aRightDiv.appendChild(voteDiv);
+    
+                if (selection[index] == i) {
+                    toClick.push({ row: index, col: i });
+                }
+            }
+    
+            const circleDiv = document.createElement("div");
+            circleDiv.classList.add("circle");
+
+            aRightDiv.appendChild(circleDiv);
+        }
+        
+        const aPointsDiv = document.createElement("div");
+        aPointsDiv.classList.add("aPoints");
+        aPointsDiv.textContent = `${(score < 1 ? "-" : "+")}${Math.abs(score)}`;
+        
+        // by default is red (ie no class == incorrect)
+        if (score > 0) {
+            bannerDiv.classList.add("correct");
+            aPointsDiv.classList.add("correct");
+        }
+        
+        const aAnsweredDiv = document.createElement("div");
+        aAnsweredDiv.classList.add("aAnswered");
+        aAnsweredDiv.textContent = `${votes}/${playerCount - 1}`;
+        
+        aRightDiv.appendChild(aPointsDiv);
+        aRightDiv.appendChild(aAnsweredDiv);
+
+        answerDiv.appendChild(aContentDiv);
+        answerDiv.appendChild(aRightDiv);
+        answerDiv.appendChild(bannerDiv);
+
+        parentDiv.appendChild(answerDiv);
+    });
+
+    addEventListenersVoting();
+
+    toClick.forEach(({ row, col }) => {
+        moveCircleTo(row, col, true);
+    });
+});
+
+callbacks.set("tick", ({ timer }) => {
+    const minutes = Math.floor(timer / 60);
+    const seconds = timer - minutes * 60;
+    document.getElementById("minutes").textContent = String(minutes).padStart(2, "0");
+    document.getElementById("seconds").textContent = String(seconds).padStart(2, "0");
+});
+
+callbacks.set("submit", ({}) => {
+    const submission = [];
+    chosenAnswers.forEach(({ input, answer }, index) => {
+        if (inputs[index].classList.contains("valid")) {
+            submission.push({ input, answer, index });
+        }
+    });
+
+    sendMessage("submit", { id: myId, submission });
+});
+
+callbacks.set("vote", ({ submission }) => {
+
+    // each element in submission = { input, answer, votes, score, id, username }
+    submission.forEach(({ input, answer, votes, score, id, username}, index) => {
+        scores[index].textContent = `${(score < 1 ? "-" : "+")}${Math.abs(score)}`;
+        voteCounts[index].textContent = `${votes}/${numPlayers - 1}`;
+
+        // scores & banners conditional formatting
+        if (score > 0) {
+            scores[index].classList.add("correct");
+            banners[index].classList.add("correct");
+            banners[index].textContent = "+1";
+        } else {
+            scores[index].classList.remove("correct");
+            banners[index].classList.remove("correct");
+            banners[index].textContent = "+0";
+        }
     });
 });

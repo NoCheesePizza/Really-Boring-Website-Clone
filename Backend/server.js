@@ -75,6 +75,7 @@ function countDown() {
 
         // break recursion and ask clients for submission
         if (timer <= 0) {
+            ++letterType; // % 3 == 0 means contains
             currQuestion = -1;
             submissionCount = 0;
             submissions = Array.from({ length: 12 }, () => []);
@@ -98,7 +99,6 @@ function countDown() {
 
 // if id is given, then only send data to that guy (check is done in sendMessage)
 function sendData(id) {
-    console.log("id: " + id);
     sendMessage("transit", { to: phase }, id);
 
     switch (phase) {
@@ -133,36 +133,25 @@ function goNext() {
 
     // award actual points
     if (currQuestion != -1) {
-        submissions[currQuestion].forEach((value, key) => {
-            if (value.score > 0) {
-                ++players.get(key).score;
-                ++players.get(key).deltaScore;
+        submissions[currQuestion].forEach(answer => {
+            if (answer.score > 0) {
+                ++players.get(answer.id).score;
+                ++players.get(answer.id).deltaScore;
             }
         });
+    }
+
+    // last question
+    if (currQuestion == config[2] + 1) {
+        
     }
 
     ++currQuestion;
     sendData();
 }
 
-// answering phase, send list of questions
-function sendQuestionInfo(ws) {
-}
-
-// voting phase, send list of answers
-function sendAnswerInfo(ws) {
-}
-
-// voting phase, send selected options in case user refreshes and votes don't tally
-function sendSelectedInfo(ws) {
-}
-
-// voting phase, send vote count and score sum
-function sendVoteInfo(ws) {
-}
-
 // new player joined
-callbacks.set("enter", ({ id, username, score }) => {
+callbacks.set("enter", ({ id, username, score, deltaScore }) => {
     if (players.size == 0) {
         leaderId = id;
     }
@@ -173,7 +162,7 @@ callbacks.set("enter", ({ id, username, score }) => {
         players.set(id, { username: player.username, score: player.score, deltaScore: player.deltaScore, isNew: player.isNew });
         dcedPlayers.delete(id);
     } else {
-        players.set(id, { username, score, deltaScore: 0, isNew: true });
+        players.set(id, { username, score, deltaScore, isNew: true });
     }
 
     if (phase == 0) {
@@ -234,6 +223,7 @@ callbacks.set("transit", ({ to }) => {
             }
 
             timer = (config[1] + 1) * 10;
+            sendMessage("tick", { timer });
             countDown();
 
             break;
@@ -244,7 +234,6 @@ callbacks.set("transit", ({ to }) => {
     }
 
     sendData();
-    ++letterType; // % 3 == 0 means contains
 });
 
 callbacks.set("submit", ({ id, submission }) => {
@@ -283,10 +272,11 @@ callbacks.set("vote", ({ id, row, col }) => {
     // for each player
     selectedOptions[currQuestion].forEach((value, key) => {
         
-        // for each answer
+        // for each answer (index represents answer number)
         value.forEach((option, index) => {
             scores[index] += option == -1 ? 0 : points[option];
             voteCounts[index] += option != -1;
+            console.log(`${index}: { option: ${option}, scores: ${scores[index]}, voteCounts: ${voteCounts[index]} }`);
         });
     });
 
@@ -298,6 +288,10 @@ callbacks.set("vote", ({ id, row, col }) => {
     }
 
     sendMessage("vote", { submission });
+});
+
+callbacks.set("next", ({}) => {
+    goNext();
 });
 
 // entry point

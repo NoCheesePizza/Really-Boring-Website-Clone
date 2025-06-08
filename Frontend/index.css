@@ -3,8 +3,8 @@
     --lgrey: rgb(75, 75, 75);
     --bgGrey: rgb(33, 33, 33);
     --theme: 50, 200, 250;
-    --sSize: 2.5vh;
-    --mSize: 3.5vh;
+    --sSize: 2.25vh;
+    --mSize: 3.25vh;
     --lSize: 10vh;
     --botPadding: 4px;
     --green: 25, 150, 50;
@@ -38,7 +38,7 @@ body {
     z-index: 10;
 }
 
-.letter {
+#bigLetter {
     font-size: var(--lSize);
     border: 0.25vh dashed var(--grey);
     border-radius: 100%;
@@ -48,13 +48,17 @@ body {
     /* font-family: "Doto"; */
 }
 
+#colon {
+    color: var(--grey);
+}
+
 #stopwatch {
-    padding-right: 1.875vh;
+    padding-right: 2vh;
     font-size: 3vh;
     color: rgba(var(--theme), 0.75);
 }
 
-.instructions {
+#instructions {
     border-bottom: 0.25vh solid var(--grey);
     border-top: 0.25vh solid var(--grey);
     /* font-size: 25px; */
@@ -92,11 +96,13 @@ body {
     border-bottom: 0.25vh solid var(--lgrey);
     /* text-align: center; */
     /* position: relative; */
+    padding-left: 2.5vh;
+    padding-right: 2.8vh;
 }
 
 .qNumber {
     /* flex-grow: 1; */
-    margin-left: 2.5vh;
+    /* margin-left: 2.5vh; */
     font-size: var(--sSize);
     color: var(--grey);
     /* margin-left: -10%; */
@@ -113,11 +119,11 @@ body {
 }
 
 .qInput {
-    margin-right: 2.5vh;
-    padding-left: 2.5vh;
-    margin-left: 20%;
+    /* margin-right: 2.5vh; */
+    padding-left: 1.5vh;
+    /* margin-left: 5vh; */
     /* flex-grow: 1; */
-    width: 95vh;
+    width: 85vh;
     height: 5vh;
     background-color: rgba(75, 75, 75, 0.5);
     padding-bottom: var(--botPadding);
@@ -212,16 +218,16 @@ body {
     }
 }
 
-.bigQNum {
+#bigQNum {
     font-size: var(--lSize);
 }
 
-.smallQNum {
+#smallQNum {
     font-size: var(--sSize);
     color: var(--grey);
 }
 
-.bigQContent {
+#bigQContent {
     font-size: var(--mSize);
 }
 
@@ -257,6 +263,8 @@ body {
     height: 100%;
     width: 100%;
     font-size: var(--mSize);
+    overflow: hidden;
+    display: none;
 }
 
 .banner.correct {
@@ -312,9 +320,14 @@ body {
     text-align: right;
 }
 
-.aContent::before {
-    content: "Kemalism:";
-    color: var(--lgrey);
+.aContent {
+    color: rgba(var(--theme), 0.75);
+}
+
+.aName {
+    /* content: "Kemalism:"; */
+    /* color: rgba(var(--theme), 0.67); */
+    color: whitesmoke;
     padding-right: 2vh;
 }
 
@@ -344,6 +357,10 @@ body {
 
 .circle.correct {
     box-shadow: 0 0 2vh green;
+}
+
+.yourAnswer {
+    color: var(--lgrey);
 }
 
 /** home **/
