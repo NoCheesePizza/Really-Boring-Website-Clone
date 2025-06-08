@@ -3,13 +3,14 @@
 /*
     hard mode where you can only use each word once
     [done] enter to go to next wrong/empty input
-    if you minimise voting circle when it's red, it will be red when u maximise it somewhere else
-    refreshing questions page will reload user input (can just save words and validate all of them)
-    bug where unselecting answer doesnt update total score
-    banner only appears for the person who clicked next
-    only leader can click next
-    not only press enter to submit
-    cannot spam next
+    [done] if you minimise voting circle when it's red, it will be red when u maximise it somewhere else
+    [done] refreshing questions page will reload user input (can just save words and validate all of them)
+    [done] bug where unselecting answer doesnt update total score
+    [test] banner only appears for the person who clicked next
+    [test] only leader can click next
+    [test] not only press enter to submit
+    [test] cannot spam next
+    don't allow someone to join halfway (show blank screen)
 */
 
 //todo ------------ "global" ------------ //
@@ -136,13 +137,6 @@ function checkValidity(element, index) {
         }
     });
 
-    // answers.forEach((a, i) => {
-    //     console.log(`${i}: ${a.identicalIndices.size}`);
-    //     a.identicalIndices.forEach(elem => {
-    //         console.log(elem);
-    //     });
-    // });
-
     if (identicalIndices.size != 0) {
         isValid = false;
     }
@@ -170,7 +164,10 @@ function findNextIndex(currIndex) {
     }
 }
 
+let test = 0;
+
 function saveAllInputs() {
+    console.log(`saved ${++test} times!`);
     const toSave = [];
     inputs.forEach(div => {
         toSave.push(div.textContent);
@@ -196,24 +193,24 @@ function addEventListenersAnswering() {
     // input override for enter, tab, up arrow, down arrow
     inputs.forEach((element, index) => {
         element.addEventListener("keydown", event => {
+            
+            // save input on every keystroke, not just when clicking away or pressing the following keys
+            if (document.activeElement === element) {
+                checkValidity(element, index);
+                saveAllInputs();
+            }
+
             if (event.key == "Enter" || event.key == "Tab") {
                 event.preventDefault();
                 focusAtEnd(inputs[findNextIndex(index)]);
-                checkValidity(element, index);
-                saveAllInputs();
     
             } else if (event.key == "ArrowDown") {
                 event.preventDefault();
                 focusAtEnd(inputs[index == inputs.length - 1 ? 0 : index + 1]);
-                checkValidity(element, index);
-                saveAllInputs();
     
             } else if (event.key == "ArrowUp") {
                 event.preventDefault();
                 focusAtEnd(inputs[index == 0 ? inputs.length - 1 : index - 1]);
-                checkValidity(element, index);
-                saveAllInputs();
-
             }
         });
     });
@@ -271,31 +268,25 @@ function moveCircleTo(row, col, isFromJs) {
     sendMessage("vote", { id: myId, row, col: selection[row] });
 }
 
-// click next button to show coloured banners 
-function goNext(element, event) {
-    if (!isLeader) {
-        return;
-    }
-    event.stopPropagation();
-
+function animateBanners() {
     banners.forEach(banner => {
         banner.style.display = "block"
         banner.style.animation = "none";
         banner.offsetHeight;
         banner.style.animation = "bannerPop 1.5s ease-out forwards";
     });
+}
 
+// click next button to show coloured banners 
+function goNext(element, event) {
+    event.stopPropagation();
+    animateBanners();
+    sendMessage("next", {});
+
+    // next button animation
     element.style.animation = "none";
     element.offsetHeight;
     element.style.animation = "pulse 0.5s ease-out";
-    
-    if (banners.length == 0) {
-        sendMessage("next", {});
-    } else {
-        setTimeout(() => {
-            sendMessage("next", {});
-        }, 1500);
-    }
 }
 
 function addEventListenersVoting() {
@@ -412,13 +403,14 @@ configArrows.forEach((element, index) => {
 document.getElementById("rename").addEventListener("click", _ => {
     username = prompt("Enter your username: ");
     sendMessage("rename", { username, id: myId });
-    localStorage.setItem("rbw_username", username);
 });
 
 // reset button
 document.getElementById("resetGame").addEventListener("click", _ => {
-    sendMessage("reset", {});
-    localStorage.setItem("rbw_score", 0);
+    const isOk = confirm("Are you sure you want to reset all scores?");
+    if (isOk) {
+        sendMessage("reset", {});
+    }
 });
 
 // start button
@@ -453,6 +445,7 @@ const callbacks = new Map();
 let username = localStorage.getItem("rbw_username") ?? "New Player";
 let score = localStorage.getItem("rbw_score") ?? 0;
 let deltaScore = localStorage.getItem("rbw_deltaScore") ?? 0;
+let isNew = localStorage.getItem("rbw_isNew") ?? true;
 let theme = localStorage.getItem("rbw_theme") ?? "#32C8FA";
 
 let isLeader = false;
@@ -518,6 +511,13 @@ callbacks.set("players", ({ info, leaderId }) => {
         document.getElementById("startGame").style.display = "none";
         document.getElementById("resetGame").style.display = "none";
     }
+
+    // save stats to localStorage
+    const me = players.get(myId);
+    localStorage.setItem("rbw_username", me.username);
+    localStorage.setItem("rbw_score", me.score);
+    localStorage.setItem("rbw_deltaScore", me.deltaScore);
+    localStorage.setItem("rbw_isNew", me.isNew);
 
     // key: id, value: { username, score, deltaScore, isNew }
     players.forEach((value, key) => {
@@ -696,6 +696,13 @@ callbacks.set("answers", ({ question, number, answerCount, playerCount, shldShow
     document.getElementById("smallQNum").textContent = `of ${answerCount}`;
     document.getElementById("bigQContent").textContent = question;
 
+    // hide next button if not leader
+    if (isLeader) {
+        document.getElementById("next").style.display = "block";
+    } else {
+        document.getElementById("next").style.display = "none";
+    }
+
     const parentDiv = document.getElementById("answers");
     parentDiv.innerHTML = "";
     yourAnswer = -1;
@@ -828,4 +835,8 @@ callbacks.set("vote", ({ submission }) => {
             banners[index].textContent = "+0";
         }
     });
+});
+
+callbacks.set("next", ({}) => {
+    animateBanners();
 });

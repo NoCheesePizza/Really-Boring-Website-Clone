@@ -9,7 +9,6 @@ const players = new Map(); // id (string) to { username, score, deltaScore, isNe
 const sockets = new Map(); // id to ws
 const dcedPlayers = new Map(); // same as above
 const callbacks = new Map();
-let leaderId = "";
 
 // fixed data 
 const questions1 = fs.readFileSync("questions1.txt", "utf-8").split("\n").map(line => line.trim());
@@ -42,11 +41,13 @@ for (let i = 65; i < 90; ++i) {
 let config = [0, 11, 11, 0, 0];
 
 // game data
+let leaderId = "";
 let phase = 0; // 0 == home, 1 == answering, 2 == voting
 let questions = [];
 let letter = "A";
 let letterType = 0; // contains but not start with once every 3 rounds (1 contains 2 start in that order)
 let timer = 0;
+let canGoNext = true; // prevent spamming of next button
 
 // player's data
 let submissions = []; // array of array of { input, answer, votes, score, id, username } (for each question, for each answer)
@@ -99,7 +100,7 @@ function countDown() {
 
 // if id is given, then only send data to that guy (check is done in sendMessage)
 function sendData(id) {
-    sendMessage("transit", { to: phase }, id);
+    sendMessage("transit", { to: phase, leaderId }, id);
 
     switch (phase) {
         // home
@@ -152,12 +153,12 @@ function goNext() {
         });
 
         sendMessage("transit", { to: phase });
-        sendMessage("players", { info: Array.from(players.entries()), leaderId });
-        sendMessage("config", { values: config });
+    } else {
+        ++currQuestion;
     }
 
-    ++currQuestion;
     sendData();
+    canGoNext = true;
 }
 
 // new player joined
@@ -173,10 +174,6 @@ callbacks.set("enter", ({ id, username, score, deltaScore }) => {
         dcedPlayers.delete(id);
     } else {
         players.set(id, { username, score, deltaScore, isNew: true });
-    }
-
-    if (phase == 0) {
-        sendMessage("players", { info: Array.from(players.entries()), leaderId })
     }
 });
 
@@ -215,6 +212,11 @@ callbacks.set("transit", ({ to }) => {
 
         // answering
         case 1:
+
+            // reset delta score
+            players.forEach((value, key) => {
+                value.deltaScore = 0;
+            });
 
             // prepare randomly selected questions
             questions = (config[4] == 0 ? questions1 : questions2).sort((a, b) => Math.random() - 0.5).slice(0, config[2] + 1);
@@ -301,7 +303,16 @@ callbacks.set("vote", ({ id, row, col }) => {
 });
 
 callbacks.set("next", ({}) => {
-    goNext();
+    if (canGoNext) {
+        canGoNext = false;
+        
+        if (submissions[currQuestion].length == 0) {
+            goNext();
+        } else {
+            sendMessage("next", {});
+            setTimeout(() => goNext(), 1500);
+        }
+    }
 });
 
 // entry point
