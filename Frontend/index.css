@@ -320,6 +320,11 @@ body {
     text-align: right;
 }
 
+/* correct just means everyone answered (only inaccurate if got spectators) */
+.aAnswered.correct {
+    color: rgba(var(--theme), 0.67);
+}
+
 .aContent {
     color: rgba(var(--theme), 0.75);
 }
@@ -408,12 +413,12 @@ body {
   max-width: 50%;             /* or any specific width */
 }
 
-.host.you::after {
+.leader.you::after {
     content: "👑 🙋‍♂️";
     padding-left: 1.75vh;
 }
 
-.host::after {
+.leader::after {
     content: "👑";
     padding-left: 1.75vh;
 }

@@ -6,11 +6,11 @@
     [done] if you minimise voting circle when it's red, it will be red when u maximise it somewhere else
     [done] refreshing questions page will reload user input (can just save words and validate all of them)
     [done] bug where unselecting answer doesnt update total score
-    [test] banner only appears for the person who clicked next
-    [test] only leader can click next
-    [test] not only press enter to submit
-    [test] cannot spam next
-    don't allow someone to join halfway (show blank screen)
+    [done] banner only appears for the person who clicked next
+    [done] only leader can click next
+    [done] not only press enter to submit
+    [done] cannot spam next
+    [done - but spectator mode instead of blank screen] don't allow someone to join halfway (show blank screen)
 */
 
 //todo ------------ "global" ------------ //
@@ -63,11 +63,13 @@ function setUnanswered(element) {
     element.classList.remove("invalid");
 }
 
-function checkValidity(element, index) {
-    // remove leading and trailing whitespaces
+function checkValidity(index) {
+
+    // (don't) remove leading and trailing whitespaces (here 'cos it will mess the cursor up)
+    const element = inputs[index];
     let input = element.textContent;
-    input = input.trim();
-    element.textContent = input;
+    // input = input.trim();
+    // element.textContent = input;
     let isValid = true;
     input = input.toLowerCase(); // but don't override player's answer with lowercase chars
 
@@ -75,15 +77,15 @@ function checkValidity(element, index) {
     if (input.length == 0) {
         
         // set other red answers possibly back to green
-        chosenAnswers[index].identicalIndices.forEach(value => {
-            chosenAnswers[value].identicalIndices.delete(index);
-            if (chosenAnswers[value].identicalIndices.size == 0) {
-                setValidity(true, inputs[value]);
-            }
-        });
+        // chosenAnswers[index].identicalIndices.forEach(value => {
+        //     chosenAnswers[value].identicalIndices.delete(index);
+        //     if (chosenAnswers[value].identicalIndices.size == 0) {
+        //         setValidity(true, inputs[value]);
+        //     }
+        // });
         
         setUnanswered(element);
-        chosenAnswers[index] = { input: "", answer: "", identicalIndices: new Set() };
+        chosenAnswers[index] = { input: "", answer: "" /* , identicalIndices: new Set() */ };
         return;
     }
 
@@ -114,35 +116,51 @@ function checkValidity(element, index) {
         }
     }
 
-    const identicalIndices = chosenAnswers[index].identicalIndices;
-    chosenAnswers.forEach((otherAnswer, otherIndex) => {
-        if (otherAnswer.answer.length == 0 || index == otherIndex) {
-            return;
-        }
-
-        // not self and same answer
-        if (answer == otherAnswer.answer) {
-            setValidity(false, inputs[otherIndex]);
-            identicalIndices.add(otherIndex);
-            chosenAnswers[otherIndex].identicalIndices.add(index);
-
-        // different answer and used to be same
-        } else if (answer != otherAnswer.answer && identicalIndices.has(otherIndex)) {
-            identicalIndices.delete(otherIndex);
-            chosenAnswers[otherIndex].identicalIndices.delete(index);
-            
-            if (chosenAnswers[otherIndex].identicalIndices.size == 0) {
-                setValidity(true, inputs[otherIndex]);
+    /*
+        const identicalIndices = chosenAnswers[index].identicalIndices;
+        chosenAnswers.forEach((otherAnswer, otherIndex) => {
+            if (otherAnswer.answer.length == 0 || index == otherIndex) {
+                return;
             }
-        }
-    });
 
-    if (identicalIndices.size != 0) {
-        isValid = false;
+            // not self and same answer
+            if (answer == otherAnswer.answer) {
+                setValidity(false, inputs[otherIndex]);
+                identicalIndices.add(otherIndex);
+                chosenAnswers[otherIndex].identicalIndices.add(index);
+
+            // different answer and used to be same
+            } else if (answer != otherAnswer.answer && identicalIndices.has(otherIndex)) {
+                identicalIndices.delete(otherIndex);
+                chosenAnswers[otherIndex].identicalIndices.delete(index);
+                
+                // don't immediately set validity to true as doing so invalidates the previous letter checks
+                if (chosenAnswers[otherIndex].identicalIndices.size == 0) {
+                    setValidity(checkValidity(otherIndex), inputs[otherIndex]);
+                }
+            }
+        });
+
+        if (identicalIndices.size != 0) {
+            isValid = false;
+        }
+    */
+
+    // normal for loop because forEach cannot break early
+    for (let i = 0; i < inputs.length; ++i) {
+        if (i != index && inputs[i].textContent == answer) {
+            isValid = false;
+        }
     }
 
     setValidity(isValid, element);
-    chosenAnswers[index] = { input, answer, identicalIndices };
+    chosenAnswers[index] = { input, answer /* , identicalIndices */ };
+}
+
+function checkValidityForAll() {
+    inputs.forEach((_, index) => {
+        checkValidity(index);
+    });
 }
 
 // next invalid or unanswered question, if any, to jump to when enter is pressed (tab will cycle between questions and arrow keys are self explanatory)
@@ -180,37 +198,42 @@ function addEventListenersAnswering() {
     // wtf .fill() fills them up with references, i swear why the fuck can't languages be explicit as to whether something is a reference like goated cpp
     // answer only used for type 2 for bracket and similarity check (if type 1, input == answer)
     inputs = document.querySelectorAll(".qInput");
-    chosenAnswers = Array.from({ length: inputs.length }, () => ({ input: "", answer: "", identicalIndices: new Set() }));
+    chosenAnswers = Array.from({ length: inputs.length }, () => ({ input: "", answer: "" /* , identicalIndices: new Set() */ }));
 
     const savedInputs = JSON.parse(localStorage.getItem("rbw_inputs"));
     if (savedInputs != null) {
         savedInputs.forEach((input, index) => {
             inputs[index].textContent = input;
-            checkValidity(inputs[index], index);
+            checkValidity(index);
         });
     }
 
     // input override for enter, tab, up arrow, down arrow
     inputs.forEach((element, index) => {
-        element.addEventListener("keydown", event => {
+        element.addEventListener("input", _ => {
             
             // save input on every keystroke, not just when clicking away or pressing the following keys
             if (document.activeElement === element) {
-                checkValidity(element, index);
+                checkValidityForAll();
                 saveAllInputs();
             }
+        });
 
-            if (event.key == "Enter" || event.key == "Tab") {
+        // keydown is always 1 keystroke behind input, so need to separate the callbacks
+        element.addEventListener("keydown", event => {
+            if (event.key == "Enter" || event.key == "Tab" || event.key == "ArrowDown" || event.key == "ArrowUp") {
                 event.preventDefault();
-                focusAtEnd(inputs[findNextIndex(index)]);
-    
-            } else if (event.key == "ArrowDown") {
-                event.preventDefault();
-                focusAtEnd(inputs[index == inputs.length - 1 ? 0 : index + 1]);
-    
-            } else if (event.key == "ArrowUp") {
-                event.preventDefault();
-                focusAtEnd(inputs[index == 0 ? inputs.length - 1 : index - 1]);
+                element.textContent = element.textContent.trim();
+                checkValidityForAll();
+                saveAllInputs();
+
+                if (event.key == "Enter" || event.key == "Tab") {
+                    focusAtEnd(inputs[findNextIndex(index)]);
+                } else if (event.key == "ArrowDown") {
+                    focusAtEnd(inputs[index == inputs.length - 1 ? 0 : index + 1]);
+                } else {
+                    focusAtEnd(inputs[index == 0 ? inputs.length - 1 : index - 1]);
+                }
             }
         });
     });
@@ -223,11 +246,16 @@ let banners = null;
 let selection = null;
 let scores = null;
 let voteCounts = null;
-let numPlayers = 0;
 let yourAnswer = -1;
+let canGoNext = true; // prevent people from spamming the button and messing up the UI (logic is handled server side)
 
 // isFromJs == true => called by javascript (when player refreshes page and receives answers)
 function moveCircleTo(row, col, isFromJs) {
+
+    // selection will only be null if player joins during voting phase (can't click points but can go next if leader and spectate)
+    if (selection == null) {
+        return;
+    }
 
     // account for offset in circle index because "your answer" row has no circle
     const pseudoRow = yourAnswer != -1 && row > yourAnswer ? row - 1 : row;
@@ -279,14 +307,17 @@ function animateBanners() {
 
 // click next button to show coloured banners 
 function goNext(element, event) {
-    event.stopPropagation();
-    animateBanners();
-    sendMessage("next", {});
+    if (canGoNext) {
+        canGoNext = false;
+        event.stopPropagation();
+        animateBanners();
+        sendMessage("next", {});
 
-    // next button animation
-    element.style.animation = "none";
-    element.offsetHeight;
-    element.style.animation = "pulse 0.5s ease-out";
+        // next button animation
+        element.style.animation = "none";
+        element.offsetHeight;
+        element.style.animation = "pulse 0.5s ease-out";
+    }
 }
 
 function addEventListenersVoting() {
@@ -445,9 +476,9 @@ const callbacks = new Map();
 let username = localStorage.getItem("rbw_username") ?? "New Player";
 let score = localStorage.getItem("rbw_score") ?? 0;
 let deltaScore = localStorage.getItem("rbw_deltaScore") ?? 0;
-let isNew = localStorage.getItem("rbw_isNew") ?? true;
 let theme = localStorage.getItem("rbw_theme") ?? "#32C8FA";
 
+let playerCount = []; // for voting phase
 let isLeader = false;
 let isConnected = false; // check if socket is open before sending message
 
@@ -501,7 +532,6 @@ callbacks.set("players", ({ info, leaderId }) => {
 
     // set self to leader
     if (leaderId == myId) {
-        isLeader = true;
         document.getElementById("startGame").style.display = "block";
         document.getElementById("resetGame").style.display = "block";
 
@@ -512,12 +542,13 @@ callbacks.set("players", ({ info, leaderId }) => {
         document.getElementById("resetGame").style.display = "none";
     }
 
-    // save stats to localStorage
-    const me = players.get(myId);
-    localStorage.setItem("rbw_username", me.username);
-    localStorage.setItem("rbw_score", me.score);
-    localStorage.setItem("rbw_deltaScore", me.deltaScore);
-    localStorage.setItem("rbw_isNew", me.isNew);
+    // save stats to localStorage (no way players doesn't have myId)
+    if (players.has(myId)) {
+        const me = players.get(myId);
+        localStorage.setItem("rbw_username", me.username);
+        localStorage.setItem("rbw_score", me.score);
+        localStorage.setItem("rbw_deltaScore", me.deltaScore);
+    }
 
     // key: id, value: { username, score, deltaScore, isNew }
     players.forEach((value, key) => {
@@ -533,7 +564,7 @@ callbacks.set("players", ({ info, leaderId }) => {
             pNameDiv.classList.add("you");
         }
         if (key == leaderId) {
-            pNameDiv.classList.add("host");
+            pNameDiv.classList.add("leader");
         }
 
         const pScoreAndDeltaDiv = document.createElement("div");
@@ -575,10 +606,12 @@ callbacks.set("config", ({ values }) => {
 });
 
 // received signal to change phase
-callbacks.set("transit", ({ to }) => {
+callbacks.set("transit", ({ to, leaderId }) => {
     const homeDiv = document.getElementById("home");
     const answeringDiv = document.getElementById("answering");
     const votingDiv = document.getElementById("voting");
+
+    isLeader = myId == leaderId;
 
     switch (to) {
         // home page
@@ -689,7 +722,8 @@ callbacks.set("questions", ({ questions, letter, letterType, type }) => {
 */
 
 // answers = array of { input, answer, votes, score, id, username }
-callbacks.set("answers", ({ question, number, answerCount, playerCount, shldShowUsername, answers, selectedOptions }) => {
+callbacks.set("answers", ({ question, number, answerCount, info, shldShowUsername, answers, selectedOptions }) => {
+    const players = new Map(info);
 
     // set question number and content
     document.getElementById("bigQNum").textContent = number + 1;
@@ -698,19 +732,26 @@ callbacks.set("answers", ({ question, number, answerCount, playerCount, shldShow
 
     // hide next button if not leader
     if (isLeader) {
-        document.getElementById("next").style.display = "block";
+        document.getElementById("next").style.visibility = "visible";
     } else {
-        document.getElementById("next").style.display = "none";
+        document.getElementById("next").style.visibility = "hidden";
     }
+
+    yourAnswer = -1;
+    canGoNext = true;
+    playerCount = []
 
     const parentDiv = document.getElementById("answers");
     parentDiv.innerHTML = "";
-    yourAnswer = -1;
 
     selection = new Map(selectedOptions).get(myId);
-    numPlayers = playerCount;
-    console.log("playerCount: " + playerCount);
     const toClick = []; // vector of { row, col }
+
+    // for loop faster than filter / reduce / any fancy bullshit
+    spectatorCount = 0;
+    players.forEach((value, key) => {
+        spectatorCount += value.isNew == true;
+    });
 
     // render all answers
     answers.forEach(({ input, answer, votes, score, id, username }, index) => {
@@ -737,10 +778,10 @@ callbacks.set("answers", ({ question, number, answerCount, playerCount, shldShow
         const aRightDiv = document.createElement("div");
         aRightDiv.classList.add("aRight");
 
-        if (id == myId) {
+        if (id == myId || selection == null) {
             const yourAnswerDiv = document.createElement("div");
             yourAnswerDiv.classList.add("yourAnswer");
-            yourAnswerDiv.textContent = "YOUR ANSWER";
+            yourAnswerDiv.textContent = selection == null ? "YOU ARE SPECTATING" : "YOUR ANSWER";
 
             aRightDiv.appendChild(yourAnswerDiv);
             yourAnswer = index;
@@ -780,7 +821,14 @@ callbacks.set("answers", ({ question, number, answerCount, playerCount, shldShow
         
         const aAnsweredDiv = document.createElement("div");
         aAnsweredDiv.classList.add("aAnswered");
-        aAnsweredDiv.textContent = `${votes}/${playerCount - 1}`;
+        const totalCount = players.size - spectatorCount - players.has(id);
+        aAnsweredDiv.textContent = `${votes}/${totalCount}`; // account for dc or newly joined
+
+        // conditional formatting when everyone has answered
+        playerCount.push(totalCount);
+        if (votes == totalCount) {
+            aAnsweredDiv.classList.add("correct");
+        }
         
         aRightDiv.appendChild(aPointsDiv);
         aRightDiv.appendChild(aAnsweredDiv);
@@ -813,16 +861,25 @@ callbacks.set("submit", ({}) => {
             submission.push({ input, answer, index });
         }
     });
+    console.log(submission, chosenAnswers);
 
     sendMessage("submit", { id: myId, submission });
 });
 
-callbacks.set("vote", ({ submission }) => {
+callbacks.set("vote", ({ submission, info }) => {
+    const players = new Map(info);
 
     // each element in submission = { input, answer, votes, score, id, username }
     submission.forEach(({ input, answer, votes, score, id, username}, index) => {
         scores[index].textContent = `${(score < 1 ? "-" : "+")}${Math.abs(score)}`;
-        voteCounts[index].textContent = `${votes}/${numPlayers - 1}`;
+        const textContent = voteCounts[index].textContent;
+        voteCounts[index].textContent = `${votes}/${playerCount[index]}`;
+
+        if (votes == playerCount[index]) {
+            voteCounts[index].classList.add("correct");
+        } else {
+            voteCounts[index].classList.remove("correct");
+        }
 
         // scores & banners conditional formatting
         if (score > 0) {

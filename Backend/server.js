@@ -61,12 +61,16 @@ function sendMessage(header, body, id) {
     // send to all players
     if (id === undefined) {
         players.forEach((value, key) => {
-            sockets.get(key).send(JSON.stringify({ header, body }));
+            if (sockets.has(key)) {
+                sockets.get(key).send(JSON.stringify({ header, body }));
+            }
         });
     
     // send to specific player
     } else {
-        sockets.get(id).send(JSON.stringify({ header, body }));
+        if (sockets.has(id)) {
+            sockets.get(id).send(JSON.stringify({ header, body }));
+        }
     }
 }
 
@@ -117,11 +121,13 @@ function sendData(id) {
 
         // voting
         case 2:
+
+            // send entire player info to determine how many needed to answer for each question in case someone dc's
             sendMessage("answers", { 
                 question: questions[currQuestion], 
                 number: currQuestion, 
                 answerCount: config[2] + 1, 
-                playerCount: players.size, 
+                info: Array.from(players.entries()), 
                 shldShowUsername: config[3] == 0, 
                 answers: submissions[currQuestion],
                 selectedOptions: Array.from(selectedOptions[currQuestion])
@@ -134,11 +140,12 @@ function goNext() {
 
     // award actual points
     if (currQuestion != -1) {
-        console.log(submissions.length);
         submissions[currQuestion].forEach(answer => {
             if (answer.score > 0) {
-                ++players.get(answer.id).score;
-                ++players.get(answer.id).deltaScore;
+                if (players.has(answer.id)) {
+                    ++players.get(answer.id).score;
+                    ++players.get(answer.id).deltaScore;
+                }
             }
         });
     }
@@ -146,12 +153,6 @@ function goNext() {
     // last question
     if (currQuestion == config[2]) {
         phase = 0;
-
-        // players are no longer new so set isNew to false
-        players.forEach((value, key) => {
-            value.isNew = false;
-        });
-
         sendMessage("transit", { to: phase });
     } else {
         ++currQuestion;
@@ -175,12 +176,18 @@ callbacks.set("enter", ({ id, username, score, deltaScore }) => {
     } else {
         players.set(id, { username, score, deltaScore, isNew: true });
     }
+
+    // force everyone to redraw ui (leader might've been changed)
+    sendData();
+
 });
 
 // player changed username
 callbacks.set("rename", ({ username, id }) => {
-    players.get(id).username = username;
-    sendMessage("players", { info: Array.from(players.entries()), leaderId })
+    if (players.has(id)) {
+        players.get(id).username = username;
+        sendMessage("players", { info: Array.from(players.entries()), leaderId })
+    }
 });
 
 // player changed config
@@ -198,6 +205,8 @@ callbacks.set("reset", ({}) => {
         value.isNew = true;
     });
 
+    // remove memory of isNew for players not present
+    dcedPlayers = new Map();
     sendMessage("players", { info: Array.from(players.entries()), leaderId })
 });
 
@@ -212,11 +221,6 @@ callbacks.set("transit", ({ to }) => {
 
         // answering
         case 1:
-
-            // reset delta score
-            players.forEach((value, key) => {
-                value.deltaScore = 0;
-            });
 
             // prepare randomly selected questions
             questions = (config[4] == 0 ? questions1 : questions2).sort((a, b) => Math.random() - 0.5).slice(0, config[2] + 1);
@@ -242,6 +246,13 @@ callbacks.set("transit", ({ to }) => {
 
         // voting
         case 2:
+
+            // reset delta score and isNew
+            players.forEach((value, key) => {
+                value.deltaScore = 0;
+                value.isNew = false;
+            });
+
             break;
     }
 
@@ -249,6 +260,12 @@ callbacks.set("transit", ({ to }) => {
 });
 
 callbacks.set("submit", ({ id, submission }) => {
+    
+    // technically if player quits during answering phase it won't even send this event anyway
+    if (!players.has(id)) {
+        return;
+    }
+
     const username = players.get(id).username;
 
     // each answer: { input, answer, votes, score, id, username }
@@ -263,8 +280,12 @@ callbacks.set("submit", ({ id, submission }) => {
         // initialise each player's options to tally if they dc (should be in the same order as submissions)
         players.forEach((value, key) => {
             submissions.forEach((question, qIndex) => {
+                const selectedOption = selectedOptions[qIndex];
+
                 question.forEach(_ => {
-                    selectedOptions[qIndex].get(key).push(-1); // -1 for unselected
+                    if (selectedOption.has(key)) {
+                        selectedOption.get(key).push(-1); // -1 for unselected
+                    }
                 });
             });
         })
@@ -276,6 +297,10 @@ callbacks.set("submit", ({ id, submission }) => {
 // client clicks on a number to vote
 // row == answer number, col == option number
 callbacks.set("vote", ({ id, row, col }) => {
+    if (!selectedOptions[currQuestion].has(id)) {
+        return;
+    }
+
     selectedOptions[currQuestion].get(id)[row] = col;
     let voteCounts = Array(submissions[currQuestion].length).fill(0);
     let scores = Array(submissions[currQuestion].length).fill(0);
@@ -288,7 +313,6 @@ callbacks.set("vote", ({ id, row, col }) => {
         value.forEach((option, index) => {
             scores[index] += option == -1 ? 0 : points[option];
             voteCounts[index] += option != -1;
-            console.log(`${index}: { option: ${option}, scores: ${scores[index]}, voteCounts: ${voteCounts[index]} }`);
         });
     });
 
@@ -299,13 +323,13 @@ callbacks.set("vote", ({ id, row, col }) => {
         submission[i].votes = voteCounts[i];
     }
 
-    sendMessage("vote", { submission });
+    sendMessage("vote", { submission, info: Array.from(players.entries()) });
 });
 
 callbacks.set("next", ({}) => {
     if (canGoNext) {
         canGoNext = false;
-        
+
         if (submissions[currQuestion].length == 0) {
             goNext();
         } else {
@@ -332,21 +356,26 @@ wss.on("connection", ws => {
         
         callbacks.get(msg.header)(msg.body);
 
+        // no need anymore, data is sent in the callback
         // players variable not accurate if do this above, but id needs to be set first
-        if (msg.header == "enter") {
-            sendData(id);
-        }
+        // if (msg.header == "enter") {
+            // sendData(id);
+        // }
     });
 
     // record disconnected players
     ws.on("close", () => {
         console.log(`${id} disconnected`);
-        const player = players.get(id);
-        dcedPlayers.set(id, { username: player.username, score: player.score, deltaScore: player.deltaScore, isNew: player.isNew});
-        players.delete(id);
-        sockets.delete(id);
+
+        if (players.has(id)) {
+            const player = players.get(id);
+            dcedPlayers.set(id, { username: player.username, score: player.score, deltaScore: player.deltaScore, isNew: player.isNew});
+            players.delete(id);
+            sockets.delete(id);
+        }
 
         // find new leader
         leaderId = players.keys().next().value ?? "";
+        sendData();
     });
 });
