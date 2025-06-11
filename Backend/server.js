@@ -10,7 +10,7 @@ const sockets = new Map(); // id to ws
 const dcedPlayers = new Map(); // same as above
 const callbacks = new Map();
 
-// fixed data 
+// fixed data  (include "Backend/" if running via vs code)
 const questions1 = fs.readFileSync("questions1.txt", "utf-8").split("\n").map(line => line.trim());
 const questions2 = fs.readFileSync("questions2.txt", "utf-8").split("\n").map(line => line.trim());
 const points = [-2, -1, 0, 1, 2];
@@ -173,13 +173,23 @@ callbacks.set("enter", ({ id, username, score, deltaScore }) => {
         const player = dcedPlayers.get(id);
         players.set(id, { username: player.username, score: player.score, deltaScore: player.deltaScore, isNew: player.isNew });
         dcedPlayers.delete(id);
+
+        // readd votes back when dced player returns
+        if (phase == 2 && selectedOptions[currQuestion].has(id)) {
+            selectedOptions[currQuestion].get(id).forEach((option, index) => {
+                if (option != -1) {
+                    submissions[currQuestion][index].score += points[option]
+                    ++submissions[currQuestion][index].votes;
+                }
+            });
+        }
+
     } else {
         players.set(id, { username, score, deltaScore, isNew: true });
     }
 
     // force everyone to redraw ui (leader might've been changed)
     sendData();
-
 });
 
 // player changed username
@@ -244,14 +254,8 @@ callbacks.set("transit", ({ to }) => {
 
             break;
 
-        // voting
+        // voting (not hit, to trigger something after answering phase put it below in submit)
         case 2:
-
-            // reset delta score and isNew
-            players.forEach((value, key) => {
-                value.deltaScore = 0;
-                value.isNew = false;
-            });
 
             break;
     }
@@ -279,6 +283,11 @@ callbacks.set("submit", ({ id, submission }) => {
 
         // initialise each player's options to tally if they dc (should be in the same order as submissions)
         players.forEach((value, key) => {
+
+            // reset delta score and isNew
+            value.deltaScore = 0;
+            value.isNew = false;
+
             submissions.forEach((question, qIndex) => {
                 const selectedOption = selectedOptions[qIndex];
 
@@ -310,10 +319,13 @@ callbacks.set("vote", ({ id, row, col }) => {
     selectedOptions[currQuestion].forEach((value, key) => {
         
         // for each answer (index represents answer number)
-        value.forEach((option, index) => {
-            scores[index] += option == -1 ? 0 : points[option];
-            voteCounts[index] += option != -1;
-        });
+        // don't count disconnected players' answers
+        if (players.has(key)) {
+            value.forEach((option, index) => {
+                scores[index] += option == -1 ? 0 : points[option];
+                voteCounts[index] += option != -1;
+            });
+        }
     });
 
     // update submissions
@@ -368,8 +380,20 @@ wss.on("connection", ws => {
         console.log(`${id} disconnected`);
 
         if (players.has(id)) {
+            
+            // subtract votes from answers
+            // in hindsight should've probably saved answers client side instead of server side but whatever no biggie
+            if (phase == 2 && selectedOptions[currQuestion].has(id)) {
+                selectedOptions[currQuestion].get(id).forEach((option, index) => {
+                    if (option != -1) {
+                        submissions[currQuestion][index].score -= points[option]
+                        --submissions[currQuestion][index].votes;
+                    }
+                });
+            }
+
             const player = players.get(id);
-            dcedPlayers.set(id, { username: player.username, score: player.score, deltaScore: player.deltaScore, isNew: player.isNew});
+            dcedPlayers.set(id, { username: player.username, score: player.score, deltaScore: player.deltaScore, isNew: player.isNew });
             players.delete(id);
             sockets.delete(id);
         }

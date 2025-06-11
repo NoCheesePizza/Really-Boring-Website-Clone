@@ -150,6 +150,7 @@ function checkValidity(index) {
     for (let i = 0; i < inputs.length; ++i) {
         if (i != index && inputs[i].textContent == answer) {
             isValid = false;
+            break;
         }
     }
 
@@ -619,7 +620,6 @@ callbacks.set("transit", ({ to, leaderId }) => {
             answeringDiv.style.display = "none";
             votingDiv.style.display = "none";
             homeDiv.style.display = "block";
-            localStorage.removeItem("rbw_inputs");
             // sendMessage("players config", { id });
             break;
 
@@ -636,6 +636,7 @@ callbacks.set("transit", ({ to, leaderId }) => {
             homeDiv.style.display = "none";
             answeringDiv.style.display = "none";
             votingDiv.style.display = "block";
+            localStorage.removeItem("rbw_inputs");
             // sendMessage("answers selected votes", { id });
             break;
     }
@@ -750,6 +751,7 @@ callbacks.set("answers", ({ question, number, answerCount, info, shldShowUsernam
     // for loop faster than filter / reduce / any fancy bullshit
     spectatorCount = 0;
     players.forEach((value, key) => {
+        console.log(`isNew: ${key}, ${value.isNew}`);
         spectatorCount += value.isNew == true;
     });
 
@@ -822,6 +824,7 @@ callbacks.set("answers", ({ question, number, answerCount, info, shldShowUsernam
         const aAnsweredDiv = document.createElement("div");
         aAnsweredDiv.classList.add("aAnswered");
         const totalCount = players.size - spectatorCount - players.has(id);
+        // console.log(`${index}: ${players.size}, ${spectatorCount}, ${players.has(id)}`);
         aAnsweredDiv.textContent = `${votes}/${totalCount}`; // account for dc or newly joined
 
         // conditional formatting when everyone has answered
@@ -829,6 +832,8 @@ callbacks.set("answers", ({ question, number, answerCount, info, shldShowUsernam
         if (votes == totalCount) {
             aAnsweredDiv.classList.add("correct");
         }
+
+        console.log(`i (${index}): ${score}, ${votes}`);
         
         aRightDiv.appendChild(aPointsDiv);
         aRightDiv.appendChild(aAnsweredDiv);
