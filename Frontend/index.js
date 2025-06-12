@@ -11,6 +11,9 @@
     [done] not only press enter to submit
     [done] cannot spam next
     [done - but spectator mode instead of blank screen] don't allow someone to join halfway (show blank screen)
+    limit name length
+    test voting buttons
+    don't hard code top bars height
 */
 
 //todo ------------ "global" ------------ //
