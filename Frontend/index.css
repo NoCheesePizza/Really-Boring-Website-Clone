@@ -1,14 +1,17 @@
+/** globals **/
+
 :root {
     --grey: rgb(100, 100, 100);
     --lgrey: rgb(75, 75, 75);
     --bgGrey: rgb(33, 33, 33);
     --theme: 50, 200, 250;
+    --green: 25, 150, 50;
+    --red: 150, 25, 50;
     --sSize: 1.2vw;
     --mSize: 1.6vw;
     --lSize: 5vw;
     --botPadding: 0.1vw;
-    --green: 25, 150, 50;
-    --red: 150, 25, 50;
+    --emojiPadding: 0.8vw;
 }
 
 body {
@@ -20,22 +23,54 @@ body {
     height: 100vh;
 }
 
+::selection {
+    background-color: rgba(var(--theme), 0.5);
+}
+
+::-webkit-scrollbar {
+    background-color: rgba(128, 128, 128, 0.15);
+    width: 0.75vw;
+    border-radius: 3vw;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(var(--theme), 0.15);
+    border-radius: 3vw;
+}
+
 /** answering **/
+
+.frozenColumn {
+    align-items: stretch;
+    display: flex;
+    justify-content: space-between;
+    /* align-items: center; */
+    flex-direction: column;
+    position: sticky;
+    top: 0vw;
+    gap: 1vw;
+    z-index: 10;
+    /* padding-top: 1vw; */
+    /* padding-bottom: 0.5vw; */
+    /* padding-left: 3.1vw; */
+    /* padding-right: 3.1vw; */
+    background-color: var(--bgGrey);
+}
 
 .topRow {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 1.2vw;
-    padding-top: 21.3px;
-    padding-bottom: 21.3px;
+    padding-top: 1vw;
+    padding-bottom: 1vw;
     padding-left: 3.1vw;
     padding-right: 3.1vw;
-    position: sticky;
-    top: 0vw;
-    height: 140px;
+    /* position: sticky; */
+    /* top: 0vw; */
+    /* height: 140px; */
     background-color: var(--bgGrey);
-    z-index: 10;
+    /* z-index: 10; */
 }
 
 #bigLetter {
@@ -67,10 +102,10 @@ body {
     margin-right: 0vw;
     font-size: var(--sSize);
     color: var(--grey);
-    position: sticky;
-    top: 182.5px;
+    /* position: sticky; */
+    /* top: 182.5px; */
     background-color: var(--bgGrey);
-    z-index: 9;
+    /* z-index: 9; */
 }
 
 .bottomColumn {
@@ -105,7 +140,7 @@ body {
     width: 44vw;
     height: 2.5vw;
     background-color: rgba(75, 75, 75, 0.5);
-    padding-bottom: var(--botPadding);
+    /* padding-bottom: var(--botPadding); */
     text-overflow: clip;
     white-space: nowrap;
     overflow: hidden;
@@ -115,10 +150,7 @@ body {
     caret-color: rgba(var(--theme), 0.75);
     caret-shape:underscore;
     align-self:flex-end;
-}
-
-::selection {
-    background-color: rgba(var(--theme), 0.5);
+    padding-left: 0.6vw;
 }
 
 .qInput.valid {
@@ -216,13 +248,15 @@ body {
     line-clamp: 2;
     -webkit-line-clamp: 2; /* 👈 limits to 2 lines */
     -webkit-box-orient: vertical;
+    transform: translateX(-4%);
 }
 
 .line {
-    height: 0vw;
-    border-top: 0.4vw double var(--lgrey);
-    position: sticky;
-    top: 182.5px;
+    /* height: 20vw; */
+    /* width: 100vw; */
+    border-top: 0.5vw double var(--lgrey);
+    /* position: sticky; */
+    /* top: 182.5px; */
 }
 
 .answer {
@@ -386,56 +420,55 @@ body {
     align-items: center;
     font-size: var(--sSize);
     height: 2.5vw;
-    padding-right: 0.8vw;
+    padding-right: var(--emojiPadding);
 }
 
 .pName {
-  white-space: nowrap;         /* prevent wrapping */
-  overflow: hidden;            /* hide overflowed text */
-  text-overflow: ellipsis;     /* add ellipsis (…) at end */
-  max-width: 50%;             /* or any specific width */
+  white-space: nowrap;        
+  overflow: hidden;           
+  text-overflow: ellipsis;    
+  max-width: 50%;             
 }
 
 .leader.you::after {
     content: "👑 🙋‍♂️";
-    padding-left: 0.8vw;
+    padding-left: var(--emojiPadding);
 }
 
 .leader::after {
     content: "👑";
-    padding-left: 0.8vw;
+    padding-left: var(--emojiPadding);
 }
 
 .you::after {
     content: "🙋‍♂️";
-    padding-left: 0.8vw;
+    padding-left: var(--emojiPadding);
 }
 
 .mostImproved.highest::before {
     content: "🔥 🏅";
-    padding-right: 0.8vw;
+    padding-right: var(--emojiPadding);
 }
 
 .highest::before {
     content: "🏆";
-    padding-right: 0.8vw;
+    padding-right: var(--emojiPadding);
 }
 
 .mostImproved::before {
     content: "🔥";
-    padding-right: 0.8vw;
+    padding-right: var(--emojiPadding);
 }
 
 .pScoreAndDelta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1vw;
 }
 
 .pDelta {
     color: var(--grey);
-    width: 1.5vw;
+    width: 3.5vw;
     text-align: right;
 }
 
@@ -573,7 +606,9 @@ body {
 }
 
 #color {
-    width: 11.2vw;
+    width: 6.5vw;
+    height: 2.25vw;
+    cursor: pointer;
 }
 
 .buttonRow {
@@ -608,53 +643,66 @@ body {
 /* Responsive override for phones */
 @media only screen and (orientation: portrait) {
     :root {
-        --sSize: 2.5vw;
-        --mSize: 3.5vw;
+        --sSize: 3vw;
+        --mSize: 4.5vw;
         --lSize: 12vw;
         --botPadding: 4px;
+        --emojiPadding: 1.8vw;
     }
 
     /** answering **/
 
+    .frozenColumn {
+        gap: 4vw;
+        padding-top: 4vw;
+        /* padding-bottom: 2vw; */
+    }
+
     .topRow {
-        padding-top: 10px;
-        padding-bottom: 10px;
-        padding-left: 4vw;
-        padding-right: 4vw;
-        height: 100px;
+        /* padding-top: 10px; */
+        /* padding-bottom: 10px; */
+        padding-left: 5vw;
+        padding-right: 5vw;
+        /* height: 100px; */
     }
     
     #bigLetter {
-        padding-right: 4.5vw;
-        padding-left: 4.5vw;
+        padding-right: 4.75vw;
+        padding-left: 4.75vw;
+        /* padding-top: 1vw; */
+        /* padding-bottom: 1vw; */
     }
 
     #stopwatch {
-        padding-right: 1.2vw;
-        font-size: 2.6vw;
+        padding-right: 2.5vw;
+        font-size: 3.7vw;
         color: rgba(var(--theme), 0.75);
     }
 
     #instructions {
-        top: 119.7px;
+        /* top: 119.7px; */
+        padding-left: 5vw;
+        padding-right: 5vw;
     }
 
     .question {
         flex-direction: column;
         align-items: flex-start;
         border-bottom: 0.12vw solid var(--lgrey);
+        gap: 1vw;
     }
 
     .numAndContent {
         justify-content: flex-start;
         align-items: center;
         display: flex;
-        margin-left: 9.5vw;
+        margin-left: 8vw;
+        padding-top: 1vw;
     }
 
     .qContent {
         width: 70vw;
-        margin-left: 0.5vw;
+        margin-left: 2vw;
     }
 
     .qInput {
@@ -662,25 +710,34 @@ body {
         padding-left: 1vw;
         margin-left: 14.5vw;
         width: 70vw;
-        height: 4.5vw;
+        height: 6vw;
         padding-bottom: var(--botPadding);
     }
 
     /** voting **/
 
+    #bigQContent {
+        transform: none;
+    }
+
+    .outOf {
+        flex-direction: column;
+        gap: 0vw;
+    }
+
     .line {
-        top: 119.7px;
+        border-top: 1vw double var(--lgrey);
     }
 
     .answer {
         flex-direction: column;
         justify-content: space-between;
         align-items: stretch;
-        gap: 3vw;
+        gap: 4vw;
         padding-left: 5vw;
         padding-right: 8vw;
-        padding-top: 2vw;
-        padding-bottom: 2vw;
+        padding-top: 4vw;
+        padding-bottom: 4vw;
     }
 
     .aRight {
@@ -690,8 +747,8 @@ body {
     }
 
     #next {
-        height: 12vw;
-        width: 12vw;
+        height: 15vw;
+        width: 15vw;
     }
 
     #next:hover {
@@ -705,39 +762,90 @@ body {
     /** home **/
 
     .division {
-        display: flex;
+        /* display: flex; */
         flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        /* height: 70vw; */
-        padding: 2.5vw;
-        gap: 1.5vw;
-        margin: 0vw;
+        /* justify-content: space-between; */
+        /* align-items: center; */
+        height: auto;
+        padding-top: 7vw;
+        padding-bottom: 7vw;
+        gap: 10vw;
+        /* margin: 0vw; */
     }
     
     .section {
-        width: 40vw;
-        gap: 2.5vw;
+        /* height: auto; */
+        width: 70vw;
+        gap: 12vw;
         /* color: red; */
         /* flex-grow: 1; */
-        border: 0.1vw solid var(--lgrey);
-        /* border-radius: 10%; */
+        /* border: 0.1vw solid var(--lgrey); */
+        border-radius: 8vw;
         /* width: 30vw; */
-        padding: 1.5vw;
+        /* height: ; */
+        padding: 7vw;
         /* height: 37.5vw; */
         position: relative;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+        /* display: flex; */
+        /* flex-direction: column; */
+        /* justify-content: space-between; */
         /* border: 1px solid white; */
     }
 
     .middleColumn {
-        display: flex;
+        /* display: flex; */
         flex-direction: column;
-        justify-content: center;
-        gap: 0.5vw;
+        /* justify-content: center; */
+        gap: 6vw;
         /* flex-grow: 1; */
         /* border: 1px solid white; */
+    }
+
+    .configButton {
+        border-radius: 3vw;
+        height: 5vw;
+    }
+
+    .pDelta {
+        color: var(--grey);
+        width: 9vw;
+        /* border: 1px solid white; */
+        text-align: right;
+    }
+
+    .rename {
+        border-radius: 3vw;
+        height: 5vw;
+    }
+
+    .sName i {
+        padding-right: 3.6vw;
+        font-size: 2.4vw;
+        /* width: 1.1vw; */
+    }
+
+    .sValue {
+        border-radius: 4vw;
+        width: 14vw;
+        height: 6vw;
+        padding-right: 1vw;
+    }
+
+    .sValue::after {
+        padding-left: 0.6vw;
+        padding-right: 0.6vw;
+        font-size: 2.4vw;
+        /* transform: scale(2, 1.5); */
+        /* display: inline-block; */
+        /* transition: transform 0.5s ease; */
+    }
+
+    .menu {
+        border-radius: 4vw;
+    }
+
+    #color {
+        width: 15vw;
+        height: 5.5vw;
     }
 }

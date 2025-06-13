@@ -14,7 +14,8 @@
   <style>
   </style>
   <body>
-    <div id="answering" style="display: none">
+    <div id="answering" style="display: block">
+      <div class="frozenColumn">
       <div class="topRow">
           <div id="bigLetter">A</div>
           <div id="timer">
@@ -22,13 +23,17 @@
           </div>
       </div>
       <div id="instructions">Answer each category with a word or phrase starting with this letter.</div>
+      </div>
       <div class="bottomColumn" id="questions">
             <div class="question">
         <div class="numAndContent">
             <div class="qNumber">01</div>
             <div class="qContent">head Answer each category with a word or phrase starting with this letter.Answer each category with a word or phrase starting with this letter.</div>
         </div>
-        <div class="qInput" contenteditable="true" tabindex="0"></div>
+        <div class="qInputGroup">
+          <div class="qInput" contenteditable="true" tabindex="0"></div>
+          <div class="qInputBorder"></div>
+        </div>
     </div>
         <div class="question">
         <div class="numAndContent">
@@ -153,6 +158,7 @@
       </div>
     </div>
     <div id="voting" style="display: none">
+      <div class="frozenColumn">
       <div class="topRow">
         <div class="outOf">
           <div id="bigQNum">10</div>
@@ -162,6 +168,7 @@
         <div id="next" onclick="goNext(this, event)">NEXT</div>
       </div>
       <div class="line"></div>
+      </div>
       <div class="bottomColumn" id="answers">
     <div class="answer">
         <div class="banner correct">+1</div>
@@ -176,7 +183,7 @@
             <div class="vote correct" onclick="moveCircleTo(0, 4)">+2</div>
             <div class="circle"></div>
             <div class="aPoints correct">+40</div>
-            <div class="aAnswered">2/30</div>
+            <div class="aAnswered">2/3</div>
         </div>
     </div>
         <div class="answer">
@@ -453,7 +460,7 @@
     </div>
     </div>
   </div>
-  <div id="home" style="display: block">
+  <div id="home" style="display: none">
     <div class="division">
       <div class="section">
         <div class="cText">Configuration</div>
@@ -591,18 +598,18 @@
           </div>
         </div>
         <div class="buttonRow">
-          <div class="configButton" id="startGame" style="display: none;">Start Game</div>
-          <div class="configButton" id="resetGame" style="display: none;">Reset Game</div>
+          <div class="configButton" id="startGame" style="display: block;">Start Game</div>
+          <div class="configButton" id="resetGame" style="display: block;">Reset Game</div>
         </div>
       </div>
       <div class="section">
         <div class="pText">Players</div>
         <div class="middleColumn" id="players">
               <div class="player">
-    <div class="pName">Shishamo</div>
+    <div class="pName you leader">Shishsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfamo</div>
     <div class="pScoreAndDelta">
-        <div class="pScore">5</div>
-        <div class="pDelta">(+5)</div>
+        <div class="pScore mostImproved highest">5</div>
+        <div class="pDelta">(+24)</div>
     </div>
     </div>
         <div class="player">

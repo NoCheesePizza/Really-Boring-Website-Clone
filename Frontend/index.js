@@ -223,6 +223,9 @@ function addEventListenersAnswering() {
             }
         });
 
+        element.addEventListener('focus', () => wrapper.classList.add('focused'));
+        element.addEventListener('blur', () => wrapper.classList.remove('focused'));
+
         // keydown is always 1 keystroke behind input, so need to separate the callbacks
         element.addEventListener("keydown", event => {
             if (event.key == "Enter" || event.key == "Tab" || event.key == "ArrowDown" || event.key == "ArrowUp") {
@@ -266,15 +269,15 @@ function moveCircleTo(row, col, isFromJs) {
     
     // appear
     if (selection[row] == -1 || isFromJs) {
-        circles[pseudoRow].style.width = "6vh";
-        circles[pseudoRow].style.height = "6vh";
+        circles[pseudoRow].style.width = isPhone ? "8vw" : "3vw";
+        circles[pseudoRow].style.height = isPhone ? "8vw" : "3vw";
         circles[pseudoRow].style.transition = "box-shadow 0.5s ease, width 0.35s ease-in, height 0.35s ease-in, border-width 0.5s linear";
 
     // disappear
     } else if (col == selection[row]) {
         selection[row] = -1;
-        circles[pseudoRow].style.width = "0vh";
-        circles[pseudoRow].style.height = "0vh";
+        circles[pseudoRow].style.width = "0vw";
+        circles[pseudoRow].style.height = "0vw";
         sendMessage("vote", { id: myId, row, col: selection[row] });
         return;
 
@@ -291,9 +294,9 @@ function moveCircleTo(row, col, isFromJs) {
     }
 
     if (isPhone) {
-        circles[pseudoRow].style.left = (14 + 12.1 * col) + "%";
+        circles[pseudoRow].style.left = (39 + 9.8 * col) + "%";
     } else {
-        circles[pseudoRow].style.left = (2 + 14.5 * col) + "%";
+        circles[pseudoRow].style.left = (2.5 + 14.5 * col) + "%";
     }
 
     selection[row] = col;
@@ -341,8 +344,8 @@ const menuIsClicked = Array(5).fill(false);
 const configOptions = []; // list of lists of dom elements
 
 function closeMenu(index) {
-    configMenus[index].style.height = "0vh";
-    configMenus[index].style.maxHeight = "0vh";
+    configMenus[index].style.height = "0vw";
+    configMenus[index].style.maxHeight = "0vw";
     configMenus[index].style.overflow = "hidden";
 }
 
@@ -412,7 +415,7 @@ configArrows.forEach((element, index) => {
             configMenus[index].style.display = "block"; // if it's hidden initially
             configMenus[index].style.height = "auto";
             // configMenus[index].style.paddingTop = "1vh";
-            // configMenus[index].style.paddingBottom = "0vh";
+            // configMenus[index].style.paddingBottom = "0vw";
 
             const fullHeight = configMenus[index].scrollHeight + "px";
 
@@ -421,7 +424,7 @@ configArrows.forEach((element, index) => {
             configMenus[index].offsetHeight; // force reflow
 
             configMenus[index].style.height = fullHeight;
-            configMenus[index].style.maxHeight = "30vh";
+            configMenus[index].style.maxHeight = isPhone ? "32.5vw" : "13.3vw";
 
             setTimeout(() => {
                 configMenus[index].style.overflow = "auto";
@@ -436,8 +439,11 @@ configArrows.forEach((element, index) => {
 
 // rename button
 document.getElementById("rename").addEventListener("click", _ => {
-    username = prompt("Enter your username: ");
-    sendMessage("rename", { username, id: myId });
+    username = prompt("Enter your username:");
+    username = username.substring(0, 25).trim(); // limit name size to 25 characters and remove whitespaces
+    if (username != null && username != "") { // if user presses cancel username will be null
+        sendMessage("rename", { username, id: myId });
+    }
 });
 
 // reset button
