@@ -10,7 +10,7 @@
     --sSize: 1.2vw;
     --mSize: 1.6vw;
     --lSize: 5vw;
-    --botPadding: 0.1vw;
+    --botPadding: 0.4vw;
     --emojiPadding: 0.8vw;
 }
 
@@ -102,6 +102,7 @@ body {
     margin-right: 0vw;
     font-size: var(--sSize);
     color: var(--grey);
+
     /* position: sticky; */
     /* top: 182.5px; */
     background-color: var(--bgGrey);
@@ -117,7 +118,7 @@ body {
 .question {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
     margin-top: 1vw;
     border-bottom: 0.12vw solid var(--lgrey);
     padding-left: 1.2vw;
@@ -134,6 +135,13 @@ body {
 .qContent {
     padding-bottom: var(--botPadding);
     width: 44vw;
+}
+
+.qInputGroup {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .qInput {
@@ -161,7 +169,15 @@ body {
     background-color: rgba(175, 0, 0, 0.25);
 }
 
-.qInput::after {
+.qInputBorder {
+    border-bottom: 0.12vw solid rgb(var(--theme));
+    position: absolute;
+    top: 100%;
+    width: 0%;
+    transition: width 0.25s ease-in-out;
+}
+
+/* .qInput::after {
     content: "";
     position: absolute;
     bottom: 0;
@@ -170,14 +186,14 @@ body {
     background-color: rgb(var(--theme));
     width: 100%;
     transform: scaleX(0);
-    transform-origin: left; /* grows from left to right */
+    transform-origin: left;
     transition: transform 0.25s ease-in-out;
 }
 
 .qInput:focus::after {
-  transform: scaleX(1); /* full width */
-  transform-origin: left; /* growth from left */
-}
+  transform: scaleX(1); 
+  transform-origin: left; 
+} */
 
 .break {
     color: var(--bgGrey);
@@ -244,11 +260,11 @@ body {
     width: 50%;
     text-align: center;
     align-content: center;
-    display: -webkit-box;
-    line-clamp: 2;
-    -webkit-line-clamp: 2; /* 👈 limits to 2 lines */
-    -webkit-box-orient: vertical;
-    transform: translateX(-4%);
+    /* display: -webkit-box; */
+    /* line-clamp: 2; */
+    /* -webkit-line-clamp: 2; 👈 limits to 2 lines */
+    /* -webkit-box-orient: vertical; */
+    /* transform: translateX(-4%); */
 }
 
 .line {
@@ -346,6 +362,7 @@ body {
 
 .aContent {
     color: rgba(var(--theme), 0.75);
+    overflow-wrap: anywhere;
 }
 
 .aName {
@@ -390,13 +407,13 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 7vw;
+    padding: 4.8vw;
 }
 
 .section {
     border: 0.1vw solid var(--lgrey);
     border-radius: 3.5vw;
-    width: 30vw;
+    width: 34vw;
     padding-top: 3.5vw;
     padding-bottom: 3.5vw;
     padding-left: 4vw;
@@ -427,7 +444,7 @@ body {
   white-space: nowrap;        
   overflow: hidden;           
   text-overflow: ellipsis;    
-  max-width: 50%;             
+  max-width: 20vw;             
 }
 
 .leader.you::after {
@@ -458,6 +475,13 @@ body {
 .mostImproved::before {
     content: "🔥";
     padding-right: var(--emojiPadding);
+}
+
+.pScore {
+    white-space: nowrap;        
+    overflow: hidden;           
+    text-overflow: ellipsis; 
+    max-width: 7vw;
 }
 
 .pScoreAndDelta {
@@ -714,6 +738,11 @@ body {
         padding-bottom: var(--botPadding);
     }
 
+    .qInputBorder {
+        left: 17%;
+        border-width: 0.3vw;
+    }
+
     /** voting **/
 
     #bigQContent {
@@ -806,11 +835,19 @@ body {
         height: 5vw;
     }
 
+    .pName {
+        max-width: 37vw;             
+    }
+
     .pDelta {
         color: var(--grey);
         width: 9vw;
         /* border: 1px solid white; */
         text-align: right;
+    }
+
+    .pScore {
+        max-width: 17vw;
     }
 
     .rename {

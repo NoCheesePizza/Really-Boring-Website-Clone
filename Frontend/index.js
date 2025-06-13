@@ -26,6 +26,7 @@ let chosenType = 0; // 0 => == 0 => type 1, == 1 => type 2
 let chosenLetterType = 0; // % 3 != 0 => start with, % 3 == 0 => contain but not start with
 let chosenLetter = "A";
 
+let inputBorders = null;
 let inputs = null;
 let chosenAnswers = null;
 let chosenQuestions = null;
@@ -71,10 +72,11 @@ function checkValidity(index) {
     // (don't) remove leading and trailing whitespaces (here 'cos it will mess the cursor up)
     const element = inputs[index];
     let input = element.textContent;
-    // input = input.trim();
-    // element.textContent = input;
+    let playerInput = element.textContent;
     let isValid = true;
-    input = input.toLowerCase(); // but don't override player's answer with lowercase chars
+
+    input = input.trim().toLowerCase(); // don't override player's input with lowercase chars
+    playerInput = playerInput.trim();
 
     // skip checking empty word
     if (input.length == 0) {
@@ -94,6 +96,8 @@ function checkValidity(index) {
 
     // error checking
     let answer = input; // don't need new String(input) because...strings are primitives?? wtf?
+    let playerAnswer = element.textContent; // not lowercase, send this to server but use lowercase (above) for error checking
+
     if (chosenType == 0) {
         if ((chosenLetterType % 3 != 0 && input[0] != chosenLetter) || 
         (chosenLetterType % 3 == 0 && (input[0] == chosenLetter || !input.includes(chosenLetter)))) {
@@ -113,6 +117,9 @@ function checkValidity(index) {
         if (isValid) {
             answer = indexOfWord == 0 ? input.substring(word.length) : input.substring(0, input.length - word.length);
             answer = answer.trim();
+            playerAnswer = indexOfWord == 0 ? playerInput.substring(word.length) : playerInput.substring(0, playerInput.length - word.length);
+            playerAnswer = playerAnswer.trim();
+            
             if (!answer.includes(chosenLetter) || answer.includes(" ")) {
                 isValid = false;
             }
@@ -158,7 +165,7 @@ function checkValidity(index) {
     }
 
     setValidity(isValid, element);
-    chosenAnswers[index] = { input, answer /* , identicalIndices */ };
+    chosenAnswers[index] = { input: playerInput, answer: playerAnswer /* , identicalIndices */ };
 }
 
 function checkValidityForAll() {
@@ -202,6 +209,7 @@ function addEventListenersAnswering() {
     // wtf .fill() fills them up with references, i swear why the fuck can't languages be explicit as to whether something is a reference like goated cpp
     // answer only used for type 2 for bracket and similarity check (if type 1, input == answer)
     inputs = document.querySelectorAll(".qInput");
+    inputBorders = document.querySelectorAll(".qInputBorder");
     chosenAnswers = Array.from({ length: inputs.length }, () => ({ input: "", answer: "" /* , identicalIndices: new Set() */ }));
 
     const savedInputs = JSON.parse(localStorage.getItem("rbw_inputs"));
@@ -223,8 +231,13 @@ function addEventListenersAnswering() {
             }
         });
 
-        element.addEventListener('focus', () => wrapper.classList.add('focused'));
-        element.addEventListener('blur', () => wrapper.classList.remove('focused'));
+        // growing/shrinking bottom border when input field is selected/unselected
+        element.addEventListener("focus", _ => {
+            inputBorders[index].style.width = isPhone ? "83%" : "100%";
+        });
+        element.addEventListener("blur", _ => {
+            inputBorders[index].style.width = "0%";
+        });
 
         // keydown is always 1 keystroke behind input, so need to separate the callbacks
         element.addEventListener("keydown", event => {
@@ -440,7 +453,7 @@ configArrows.forEach((element, index) => {
 // rename button
 document.getElementById("rename").addEventListener("click", _ => {
     username = prompt("Enter your username:");
-    username = username.substring(0, 25).trim(); // limit name size to 25 characters and remove whitespaces
+    username = username.trim(); // remove whitespaces
     if (username != null && username != "") { // if user presses cancel username will be null
         sendMessage("rename", { username, id: myId });
     }
@@ -657,7 +670,10 @@ callbacks.set("transit", ({ to, leaderId }) => {
             <div class="qNumber">01</div>
             <div class="qContent">head</div>
         </div>
-        <div class="qInput" contenteditable="true" tabindex="0"></div>
+        <div class="qInputGroup">
+          <div class="qInput" contenteditable="true" tabindex="0"></div>
+          <div class="qInputBorder"></div>
+        </div>
     </div>
 */
 
@@ -696,15 +712,24 @@ callbacks.set("questions", ({ questions, letter, letterType, type }) => {
         qContentDiv.classList.add("qContent");
         qContentDiv.textContent = question;
 
+        const qInputGroupDiv = document.createElement("div");
+        qInputGroupDiv.classList.add("qInputGroup");
+
         const qInputDiv = document.createElement("div");
         qInputDiv.classList.add("qInput");
         qInputDiv.contentEditable = true;
 
+        const qInputBorderDiv = document.createElement("div");
+        qInputBorderDiv.classList.add("qInputBorder");
+
         numAndContentDiv.appendChild(qNumberDiv);
         numAndContentDiv.appendChild(qContentDiv);
 
+        qInputGroupDiv.appendChild(qInputDiv);
+        qInputGroupDiv.appendChild(qInputBorderDiv);
+
         questionDiv.appendChild(numAndContentDiv);
-        questionDiv.appendChild(qInputDiv);
+        questionDiv.appendChild(qInputGroupDiv);
 
         parentDiv.appendChild(questionDiv);
     });
