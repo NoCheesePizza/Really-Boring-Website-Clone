@@ -529,11 +529,11 @@ socket.addEventListener("message", message => {
 
 /*
     <div class="player">
-    <div class="pName">Shishamo</div>
-    <div class="pScoreAndDelta">
-        <div class="pScore">5</div>
-        <div class="pDelta"></div>
-    </div>
+        <div class="pName">Shishamo</div>
+        <div class="pScoreAndDelta">
+            <div class="pScore">5</div>
+            <div class="pDelta"></div>
+        </div>
     </div>
 */
 

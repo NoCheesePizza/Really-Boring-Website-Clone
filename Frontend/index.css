@@ -44,16 +44,11 @@ body {
     align-items: stretch;
     display: flex;
     justify-content: space-between;
-    /* align-items: center; */
     flex-direction: column;
     position: sticky;
     top: 0vw;
     gap: 1vw;
     z-index: 10;
-    /* padding-top: 1vw; */
-    /* padding-bottom: 0.5vw; */
-    /* padding-left: 3.1vw; */
-    /* padding-right: 3.1vw; */
     background-color: var(--bgGrey);
 }
 
@@ -66,11 +61,7 @@ body {
     padding-bottom: 1vw;
     padding-left: 3.1vw;
     padding-right: 3.1vw;
-    /* position: sticky; */
-    /* top: 0vw; */
-    /* height: 140px; */
     background-color: var(--bgGrey);
-    /* z-index: 10; */
 }
 
 #bigLetter {
@@ -102,11 +93,7 @@ body {
     margin-right: 0vw;
     font-size: var(--sSize);
     color: var(--grey);
-
-    /* position: sticky; */
-    /* top: 182.5px; */
     background-color: var(--bgGrey);
-    /* z-index: 9; */
 }
 
 .bottomColumn {
@@ -148,7 +135,6 @@ body {
     width: 44vw;
     height: 2.5vw;
     background-color: rgba(75, 75, 75, 0.5);
-    /* padding-bottom: var(--botPadding); */
     text-overflow: clip;
     white-space: nowrap;
     overflow: hidden;
@@ -176,24 +162,6 @@ body {
     width: 0%;
     transition: width 0.25s ease-in-out;
 }
-
-/* .qInput::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 0.12vw;
-    background-color: rgb(var(--theme));
-    width: 100%;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.25s ease-in-out;
-}
-
-.qInput:focus::after {
-  transform: scaleX(1); 
-  transform-origin: left; 
-} */
 
 .break {
     color: var(--bgGrey);
@@ -260,19 +228,10 @@ body {
     width: 50%;
     text-align: center;
     align-content: center;
-    /* display: -webkit-box; */
-    /* line-clamp: 2; */
-    /* -webkit-line-clamp: 2; 👈 limits to 2 lines */
-    /* -webkit-box-orient: vertical; */
-    /* transform: translateX(-4%); */
 }
 
 .line {
-    /* height: 20vw; */
-    /* width: 100vw; */
     border-top: 0.5vw double var(--lgrey);
-    /* position: sticky; */
-    /* top: 182.5px; */
 }
 
 .answer {
@@ -679,22 +638,16 @@ body {
     .frozenColumn {
         gap: 4vw;
         padding-top: 4vw;
-        /* padding-bottom: 2vw; */
     }
 
     .topRow {
-        /* padding-top: 10px; */
-        /* padding-bottom: 10px; */
         padding-left: 5vw;
         padding-right: 5vw;
-        /* height: 100px; */
     }
     
     #bigLetter {
         padding-right: 4.75vw;
         padding-left: 4.75vw;
-        /* padding-top: 1vw; */
-        /* padding-bottom: 1vw; */
     }
 
     #stopwatch {
@@ -704,7 +657,6 @@ body {
     }
 
     #instructions {
-        /* top: 119.7px; */
         padding-left: 5vw;
         padding-right: 5vw;
     }
@@ -791,43 +743,24 @@ body {
     /** home **/
 
     .division {
-        /* display: flex; */
         flex-direction: column;
-        /* justify-content: space-between; */
-        /* align-items: center; */
         height: auto;
         padding-top: 7vw;
         padding-bottom: 7vw;
         gap: 10vw;
-        /* margin: 0vw; */
     }
     
     .section {
-        /* height: auto; */
         width: 70vw;
         gap: 12vw;
-        /* color: red; */
-        /* flex-grow: 1; */
-        /* border: 0.1vw solid var(--lgrey); */
         border-radius: 8vw;
-        /* width: 30vw; */
-        /* height: ; */
         padding: 7vw;
-        /* height: 37.5vw; */
         position: relative;
-        /* display: flex; */
-        /* flex-direction: column; */
-        /* justify-content: space-between; */
-        /* border: 1px solid white; */
     }
 
     .middleColumn {
-        /* display: flex; */
         flex-direction: column;
-        /* justify-content: center; */
         gap: 6vw;
-        /* flex-grow: 1; */
-        /* border: 1px solid white; */
     }
 
     .configButton {
@@ -842,7 +775,6 @@ body {
     .pDelta {
         color: var(--grey);
         width: 9vw;
-        /* border: 1px solid white; */
         text-align: right;
     }
 
@@ -858,7 +790,6 @@ body {
     .sName i {
         padding-right: 3.6vw;
         font-size: 2.4vw;
-        /* width: 1.1vw; */
     }
 
     .sValue {
@@ -872,9 +803,6 @@ body {
         padding-left: 0.6vw;
         padding-right: 0.6vw;
         font-size: 2.4vw;
-        /* transform: scale(2, 1.5); */
-        /* display: inline-block; */
-        /* transition: transform 0.5s ease; */
     }
 
     .menu {
