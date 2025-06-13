@@ -312,7 +312,6 @@ Items below $10 but above $0
 Anything related to AI
 Rectangular objects
 Anything related to the weather or the sky
-
 Multiplayer games
 Single-player games
 Anything related to Boomerang Fu or PlateUp!
@@ -349,7 +348,6 @@ Start of song verses (in any language)
 Anything to do with Christianity
 Actions that break school rules
 Anything to do with sex or sexual identity
-
 Furniture
 Anything related to sleep
 Vices
