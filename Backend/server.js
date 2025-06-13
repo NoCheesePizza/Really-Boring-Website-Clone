@@ -7,7 +7,7 @@ const fs = require("fs");
 const wss = new WebSocket.Server({ host: "0.0.0.0", port: 8080 });
 const players = new Map(); // id (string) to { username, score, deltaScore, isNew }
 const sockets = new Map(); // id to ws
-const dcedPlayers = new Map(); // same as above
+let dcedPlayers = new Map(); // same as above
 const callbacks = new Map();
 
 // fixed data  (include "Backend/" if running via vs code)

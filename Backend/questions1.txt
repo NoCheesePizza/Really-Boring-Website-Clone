@@ -285,7 +285,7 @@ Healthy food
 Data structures or algorithms
 Anything to do with NS
 Food you can eat raw
-Dishes with noodles
+Dishes with noodles or pasta
 Anything to do with bread
 Buttons in an IDE
 File extensions
@@ -297,9 +297,9 @@ Things with wheels
 Programming bugs/errors
 Words ending in "logy"
 Words ending in "ism"
-Words containing "ph"
+Root words containing "ph" or "gh"
 Onomatopeoia
-Verbs whose past tense does not end in "ed"
+Irregular verbs
 Prefixes or suffixes
 Words with different US & UK spellings
 Words or phrases with a number
@@ -312,7 +312,7 @@ Items below $10 but above $0
 Anything related to AI
 Rectangular objects
 Anything related to the weather or the sky
-Subscriptions or battle passes
+
 Multiplayer games
 Single-player games
 Anything related to Boomerang Fu or PlateUp!
@@ -320,7 +320,7 @@ Number types or constants
 Memes or anything viral
 Clothing
 Blue things
-Words ending in "less"
+Words ending in "ge"
 Food that crunch
 Dishes served with chopsticks
 Seafood
@@ -330,12 +330,12 @@ Overpriced items
 Scary things
 Loud or annoying sounds
 Things you can find at an airport
-Free items
+Free things
 Items sold in a McDonald's
 Words with 3 or more of the same letter
 Shell commands
 Symbols used in math, science or coding
-Words containing "gh"
+Words ending in "ment"
 Words ending in "al"
 Anything to do with digital art
 Writing tools
@@ -349,7 +349,7 @@ Start of song verses (in any language)
 Anything to do with Christianity
 Actions that break school rules
 Anything to do with sex or sexual identity
-Non-playable videogame items
+
 Furniture
 Anything related to sleep
 Vices
@@ -387,3 +387,21 @@ Things related to Apple or their products
 Things related to Microsoft or their products
 Things related to Google or their products
 Metrics to rank a game by
+Finance companies
+Words ending in "est"
+Words ending in "er"
+Words ending in "tion"
+Words ending in "able"
+Words ending in "ness"
+Words ending in "sion"
+Words ending in "ate"
+Words ending in "ise" or "ize"
+Words ending in "ic"
+Words ending in "ist"
+Words ending in "ry"
+Words ending in "ive"
+Words ending in "ian"
+Dishes with rice
+Irregular or uncountable nouns
+Adjectives that use "more" and "most"
+Words that are both a noun and a verb
