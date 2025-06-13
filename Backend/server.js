@@ -11,8 +11,16 @@ const dcedPlayers = new Map(); // same as above
 const callbacks = new Map();
 
 // fixed data  (include "Backend/" if running via vs code)
-const questions1 = fs.readFileSync("questions1.txt", "utf-8").split("\n").map(line => line.trim());
-const questions2 = fs.readFileSync("questions2.txt", "utf-8").split("\n").map(line => line.trim());
+const questions1 = fs.readFileSync("questions1.txt", "utf-8").split("\n").map(line => {
+    const question = line.split("#")[0].trim(); // Get text before first hash
+    const tags = [...line.matchAll(/#([^#\n\r]+)/g)].map(m => m[1].trim()); // Find all that satisfy the format #<any number of at least 1 characters that are not newline, return or hash>
+    return { question, tags };
+});
+const questions2 = fs.readFileSync("questions2.txt", "utf-8").split("\n").map(line => {
+    const question = line.trim();
+    const tags = [];
+    return { question, tags};
+});
 const points = [-2, -1, 0, 1, 2];
 
 // (start - QXYZ, contain - JKQXZ) -> <1% usage according to wikipedia (but can override if "any" not selected)
@@ -233,7 +241,7 @@ callbacks.set("transit", ({ to }) => {
         case 1:
 
             // prepare randomly selected questions
-            questions = (config[4] == 0 ? questions1 : questions2).sort((a, b) => Math.random() - 0.5).slice(0, config[2] + 1);
+            questions = (config[4] == 0 ? questions1 : questions2).sort((a, b) => Math.random() - 0.5).slice(0, config[2] + 1).map(q => q.question);
 
             // any letter (server decides)
             if (config[0] == 0) {
