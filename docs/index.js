@@ -492,7 +492,7 @@ function sendMessage(header, body) {
     } 
 }
 
-const socket = new WebSocket("ws://192.168.1.7:8080");
+const socket = new WebSocket("wss://my-boring-website.onrender.com");
 const myId = localStorage.getItem("rbw_id") ?? genRandomString(32);
 const callbacks = new Map();
 
