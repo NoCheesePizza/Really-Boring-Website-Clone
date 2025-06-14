@@ -4,8 +4,8 @@ const WebSocket = require("ws");
 const fs = require("fs");
 
 // server data
-const wss = new WebSocket.Server({ host: "0.0.0.0", port: 8080 });
-const players = new Map(); // id (string) to { username, score, deltaScore, isNew }
+const wss = new WebSocket.Server({ host: "0.0.0.0", port: process.env.port || 8080 });
+const players = new Map(); // id (string) to { username, score, deltaScore, isNew, theme }
 const sockets = new Map(); // id to ws
 let dcedPlayers = new Map(); // same as above
 const callbacks = new Map();
@@ -171,7 +171,7 @@ function goNext() {
 }
 
 // new player joined
-callbacks.set("enter", ({ id, username, score, deltaScore }) => {
+callbacks.set("enter", ({ id, username, score, deltaScore, theme }) => {
     if (players.size == 0) {
         leaderId = id;
     }
@@ -179,7 +179,7 @@ callbacks.set("enter", ({ id, username, score, deltaScore }) => {
     // check if newly joined player was previously disconnected
     if (dcedPlayers.has(id)) {
         const player = dcedPlayers.get(id);
-        players.set(id, { username: player.username, score: player.score, deltaScore: player.deltaScore, isNew: player.isNew });
+        players.set(id, { username: player.username, score: player.score, deltaScore: player.deltaScore, isNew: player.isNew, theme: player.theme });
         dcedPlayers.delete(id);
 
         // readd votes back when dced player returns
@@ -193,7 +193,7 @@ callbacks.set("enter", ({ id, username, score, deltaScore }) => {
         }
 
     } else {
-        players.set(id, { username, score, deltaScore, isNew: true });
+        players.set(id, { username, score, deltaScore, isNew: true, theme });
     }
 
     // force everyone to redraw ui (leader might've been changed)
@@ -226,6 +226,13 @@ callbacks.set("reset", ({}) => {
     // remove memory of isNew for players not present
     dcedPlayers = new Map();
     sendMessage("players", { info: Array.from(players.entries()), leaderId })
+});
+
+callbacks.set("color", ({ theme, id }) => {
+    if (players.has(id)) {
+        players.get(id).theme = theme;
+        sendMessage("players", { info: Array.from(players.entries()), leaderId });
+    }
 });
 
 // will only receive from leader
@@ -401,7 +408,7 @@ wss.on("connection", ws => {
             }
 
             const player = players.get(id);
-            dcedPlayers.set(id, { username: player.username, score: player.score, deltaScore: player.deltaScore, isNew: player.isNew });
+            dcedPlayers.set(id, { username: player.username, score: player.score, deltaScore: player.deltaScore, isNew: player.isNew, theme: player.theme });
             players.delete(id);
             sockets.delete(id);
         }

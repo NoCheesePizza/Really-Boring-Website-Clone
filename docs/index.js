@@ -11,9 +11,9 @@
     [done] not only press enter to submit
     [done] cannot spam next
     [done - but spectator mode instead of blank screen] don't allow someone to join halfway (show blank screen)
-    limit name length
-    test voting buttons
-    don't hard code top bars height
+    [nah] limit name length
+    [done] test voting buttons
+    [done] don't hard code top bars height
 */
 
 //todo ------------ "global" ------------ //
@@ -379,14 +379,15 @@ function hexToRgb(hex) {
 
 // colour input
 document.getElementById("color").addEventListener("input", event => {
-    const rgb = hexToRgb(event.target.value);
     theme = event.target.value;
+    const rgb = hexToRgb(event.target.value);
     document.documentElement.style.setProperty("--theme", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
 });
 
-// save color to local storage
+// save color to local storage and send it to the server
 document.getElementById("color").addEventListener("blur", _ => {
     localStorage.setItem("rbw_theme", theme);
+    sendMessage("color", { theme, id: myId });
 });
 
 // initialise configOptions
@@ -461,8 +462,7 @@ document.getElementById("rename").addEventListener("click", _ => {
 
 // reset button
 document.getElementById("resetGame").addEventListener("click", _ => {
-    const isOk = confirm("Are you sure you want to reset all scores?");
-    if (isOk) {
+    if (confirm("Are you sure you want to reset all scores?")) {
         sendMessage("reset", {});
     }
 });
@@ -492,7 +492,7 @@ function sendMessage(header, body) {
     } 
 }
 
-const socket = new WebSocket("ws://192.168.1.12:8080");
+const socket = new WebSocket("ws://192.168.1.7:8080");
 const myId = localStorage.getItem("rbw_id") ?? genRandomString(32);
 const callbacks = new Map();
 
@@ -518,7 +518,7 @@ socket.addEventListener("open", () => {
 
     // join server
     isConnected = true;
-    sendMessage("enter", { id: myId, username, score, deltaScore });
+    sendMessage("enter", { id: myId, username, score, deltaScore, theme });
 });
 
 socket.addEventListener("message", message => {
@@ -582,6 +582,7 @@ callbacks.set("players", ({ info, leaderId }) => {
         const pNameDiv = document.createElement("div");
         pNameDiv.classList.add("pName");
         pNameDiv.textContent = value.username;
+        pNameDiv.style.color = value.theme + "CC";
 
         if (myId == key) {
             pNameDiv.classList.add("you");
@@ -799,12 +800,17 @@ callbacks.set("answers", ({ question, number, answerCount, info, shldShowUsernam
         bannerDiv.textContent = "+0";
 
         const aContentDiv = document.createElement("div");
-        aContentDiv.classList.add("aContent");
+        // aContentDiv.classList.add("aContent");
 
         if (shldShowUsername) {
             const aNameSpan = document.createElement("span");
             aNameSpan.classList.add("aName");
             aNameSpan.textContent = `${username}:`;
+            
+            if (players.has(id)) {
+                aNameSpan.style.color = players.get(id).theme + "CC";
+            }
+
             aContentDiv.appendChild(aNameSpan);
         }
 
