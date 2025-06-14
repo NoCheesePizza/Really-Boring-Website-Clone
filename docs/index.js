@@ -495,7 +495,7 @@ function sendMessage(header, body) {
 }
 
 // public endpoint: "wss://my-boring-website.onrender.com", private endpoint: "ws://192.168.1.12:8080" (run ipconfig for address)
-const socket = new WebSocket("ws://192.168.1.7:8080");
+const socket = new WebSocket("wss://my-boring-website.onrender.com");
 const myId = localStorage.getItem("rbw_id") ?? genRandomString(32);
 const callbacks = new Map();
 
