@@ -56,6 +56,7 @@ let letter = "A";
 let letterType = 0; // contains but not start with once every 3 rounds (1 contains 2 start in that order)
 let timer = 0;
 let canGoNext = true; // prevent spamming of next button
+let shldRestart = false; // whether to force quit
 
 // player's data
 let submissions = []; // array of array of { input, answer, votes, score, id, username } (for each question, for each answer)
@@ -86,13 +87,21 @@ function countDown() {
     setTimeout(() => {
         --timer;
 
+        // leader initiated a restart from answering page
+        if (shldRestart && phase == 1) {
+            phase = 0;
+            sendMessage("transit", { to: phase });
+            shldRestart = false;
+            return;
+        }
+
         // break recursion and ask clients for submission
         if (timer <= 0) {
             ++letterType; // % 3 == 0 means contains
             currQuestion = -1;
             submissionCount = 0;
-            submissions = Array.from({ length: 12 }, () => []);
-            selectedOptions = Array.from({ length: 12 }, () => new Map());
+            submissions = Array.from({ length: config[2] + 1 }, () => []);
+            selectedOptions = Array.from({ length: config[2] + 1 }, () => new Map());
             
             selectedOptions.forEach((_, qIndex) => {
                 players.forEach((value, key) => {
@@ -123,7 +132,6 @@ function sendData(id) {
 
         // answering
         case 1:
-            sendMessage("transit", { to: phase }, id);
             sendMessage("questions", { questions, letter, letterType, type: config[4] }, id);
             break;
 
@@ -237,6 +245,15 @@ callbacks.set("color", ({ theme, id }) => {
 
 // will only receive from leader
 callbacks.set("transit", ({ to }) => {
+
+    // in case player somehow restarts at the last second and cause the next game to restart immediately instead
+    shldRestart = false;
+    
+    // some weird bug when the same person joins on two tabs, quick fix to prevent breaking the game
+    if ((phase + 1) % 3 != to) {
+        return;
+    }
+
     phase = to;
     
     switch (to) {
@@ -364,6 +381,10 @@ callbacks.set("next", ({}) => {
             setTimeout(() => goNext(), 1500);
         }
     }
+});
+
+callbacks.set("restart", ({}) => {
+    shldRestart = true;
 });
 
 // entry point

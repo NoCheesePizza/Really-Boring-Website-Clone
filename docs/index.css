@@ -38,6 +38,19 @@ body {
     border-radius: 3vw;
 }
 
+/** loading **/
+
+#loading {
+    display: none;
+    justify-content: center;
+    height: 100vh;
+    align-items: center;
+    padding-left: 10vw;
+    padding-right: 10vw;
+    text-align: center;
+    font-size: 27px;
+}
+
 /** answering **/
 
 .frozenColumn {
@@ -68,8 +81,9 @@ body {
     font-size: var(--lSize);
     border: 0.12vw dashed var(--grey);
     border-radius: 100%;
-    padding-right: 2.1vw;
-    padding-left: 2.1vw;
+    width: 7vw;
+    height: 7vw;
+    text-align: center;
 }
 
 #colon {
@@ -80,6 +94,14 @@ body {
     padding-right: 1vw;
     font-size: 1.5vw;
     color: rgba(var(--theme), 0.75);
+}
+
+.timeColumn {
+    flex-direction: column;
+    display: flex;
+    justify-content: center;
+    /* align-items: ; */
+    gap: 2vw;
 }
 
 #instructions {
@@ -320,7 +342,6 @@ body {
 }
 
 .aContent {
-    color: rgba(var(--theme), 0.75);
     overflow-wrap: anywhere;
 }
 
@@ -603,6 +624,7 @@ body {
 }
 
 .configButton {
+    font-size: var(--sSize);
     background-color: var(--lgrey);
     border-radius: 1vw;
     height: 2vw;
@@ -646,8 +668,9 @@ body {
     }
     
     #bigLetter {
-        padding-right: 4.75vw;
-        padding-left: 4.75vw;
+        width: 17vw;
+        height: 17vw;
+        text-align: center;
     }
 
     #stopwatch {

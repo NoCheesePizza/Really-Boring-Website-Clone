@@ -14,13 +14,19 @@
   <style>
   </style>
   <body>
+    <div id="loading">
+      The Render server is currently offline. Give it a minute or two to spin back up!
+    </div>
     <div id="answering" style="display: none">
       <div class="frozenColumn">
       <div class="topRow">
-          <div id="bigLetter">A</div>
+        <div id="bigLetter">I</div>
+        <div class="timeColumn">
           <div id="timer">
             <i class="fas fa-stopwatch" id="stopwatch"></i><span id='minutes'>00</span><span id='colon'> : </span><span id='seconds'>00</span>
           </div>
+          <div id="restart" class="configButton" onclick="restartGame(event)">Restart</div>
+        </div>
       </div>
       <div id="instructions">Answer each category with a word or phrase starting with this letter.</div>
       </div>

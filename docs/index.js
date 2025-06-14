@@ -193,10 +193,7 @@ function findNextIndex(currIndex) {
     }
 }
 
-let test = 0;
-
 function saveAllInputs() {
-    console.log(`saved ${++test} times!`);
     const toSave = [];
     inputs.forEach(div => {
         toSave.push(div.textContent);
@@ -328,9 +325,9 @@ function animateBanners() {
 // click next button to show coloured banners 
 function goNext(element, event) {
     if (canGoNext) {
+        // server will send another call to animate banners
         canGoNext = false;
         event.stopPropagation();
-        animateBanners();
         sendMessage("next", {});
 
         // next button animation
@@ -338,6 +335,11 @@ function goNext(element, event) {
         element.offsetHeight;
         element.style.animation = "pulse 0.5s ease-out";
     }
+}
+
+function restartGame(event) {
+    event.stopPropagation();
+    sendMessage("restart", {});
 }
 
 function addEventListenersVoting() {
@@ -385,7 +387,7 @@ document.getElementById("color").addEventListener("input", event => {
 });
 
 // save color to local storage and send it to the server
-document.getElementById("color").addEventListener("blur", _ => {
+document.getElementById("color").addEventListener("change", _ => {
     localStorage.setItem("rbw_theme", theme);
     sendMessage("color", { theme, id: myId });
 });
@@ -492,7 +494,8 @@ function sendMessage(header, body) {
     } 
 }
 
-const socket = new WebSocket("wss://my-boring-website.onrender.com");
+// public endpoint: "wss://my-boring-website.onrender.com", private endpoint: "ws://192.168.1.12:8080" (run ipconfig for address)
+const socket = new WebSocket("ws://192.168.1.7:8080");
 const myId = localStorage.getItem("rbw_id") ?? genRandomString(32);
 const callbacks = new Map();
 
@@ -526,6 +529,13 @@ socket.addEventListener("message", message => {
     console.log(`received: ${msg.header}`);
     callbacks.get(msg.header)(msg.body);
 });
+
+// show loading page after 1 s if not connected
+setTimeout(() => {
+    if (!isConnected) {
+        document.getElementById("loading").style.display = "flex";
+    }
+}, 1000);
 
 /*
     <div class="player">
@@ -623,7 +633,6 @@ callbacks.set("players", ({ info, leaderId }) => {
 
 // receive changed config
 callbacks.set("config", ({ values }) => {
-    console.log(values);
     values.forEach((column, row) => {
         configArrows[row].childNodes[0].textContent = configOptions[row][column].textContent + " ";
     });
@@ -636,6 +645,7 @@ callbacks.set("transit", ({ to, leaderId }) => {
     const votingDiv = document.getElementById("voting");
 
     isLeader = myId == leaderId;
+    document.getElementById("loading").style.display = "none";
 
     switch (to) {
         // home page
@@ -643,6 +653,7 @@ callbacks.set("transit", ({ to, leaderId }) => {
             answeringDiv.style.display = "none";
             votingDiv.style.display = "none";
             homeDiv.style.display = "block";
+            localStorage.removeItem("rbw_inputs");
             // sendMessage("players config", { id });
             break;
 
@@ -683,6 +694,14 @@ callbacks.set("questions", ({ questions, letter, letterType, type }) => {
     chosenLetterType = letterType;
     chosenType = type;
     chosenQuestions = questions;
+
+    // hide restart button if not leader
+    console.log({ isLeader });
+    if (isLeader) {
+        document.getElementById("restart").style.display = "block";
+    } else {
+        document.getElementById("restart").style.display = "none";
+    }
 
     // set letter and instructions
     document.getElementById("bigLetter").textContent = letter;
@@ -741,7 +760,7 @@ callbacks.set("questions", ({ questions, letter, letterType, type }) => {
 /*
     <div class="answer">
         <div class="banner correct">+1</div>
-        <div> <-- aContentDiv
+        <div class="aContent">
             <span class="aName">Kemalism:</span>knitting ability is a very long word or phrase
         </div>
         <div class="aRight">
@@ -786,7 +805,6 @@ callbacks.set("answers", ({ question, number, answerCount, info, shldShowUsernam
     // for loop faster than filter / reduce / any fancy bullshit
     spectatorCount = 0;
     players.forEach((value, key) => {
-        console.log(`isNew: ${key}, ${value.isNew}`);
         spectatorCount += value.isNew == true;
     });
 
@@ -800,7 +818,7 @@ callbacks.set("answers", ({ question, number, answerCount, info, shldShowUsernam
         bannerDiv.textContent = "+0";
 
         const aContentDiv = document.createElement("div");
-        // aContentDiv.classList.add("aContent");
+        aContentDiv.classList.add("aContent");
 
         if (shldShowUsername) {
             const aNameSpan = document.createElement("span");
@@ -864,7 +882,6 @@ callbacks.set("answers", ({ question, number, answerCount, info, shldShowUsernam
         const aAnsweredDiv = document.createElement("div");
         aAnsweredDiv.classList.add("aAnswered");
         const totalCount = players.size - spectatorCount - players.has(id);
-        // console.log(`${index}: ${players.size}, ${spectatorCount}, ${players.has(id)}`);
         aAnsweredDiv.textContent = `${votes}/${totalCount}`; // account for dc or newly joined
 
         // conditional formatting when everyone has answered
@@ -873,8 +890,6 @@ callbacks.set("answers", ({ question, number, answerCount, info, shldShowUsernam
             aAnsweredDiv.classList.add("correct");
         }
 
-        console.log(`i (${index}): ${score}, ${votes}`);
-        
         aRightDiv.appendChild(aPointsDiv);
         aRightDiv.appendChild(aAnsweredDiv);
 
@@ -906,8 +921,8 @@ callbacks.set("submit", ({}) => {
             submission.push({ input, answer, index });
         }
     });
+    
     console.log(submission, chosenAnswers);
-
     sendMessage("submit", { id: myId, submission });
 });
 
