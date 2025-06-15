@@ -26,8 +26,8 @@ const points = [-2, -1, 0, 1, 2];
 // (start - QXYZ, contain - JKQXZ) -> <1% usage according to wikipedia (but can override if "any" not selected)
 const startsList = [];
 const containsList = [];
-const startsToExclude = [ "Q", "X", "Y", "Z" ];
-const containsToExclude = [ "J", "K", "Q", "X", "Z" ];
+const startsToExclude = [ "J", "K", "Q", "X", "Y", "Z" ];
+const containsToExclude = [ "J", "K", "Q", "X", "Y", "Z" ];
 
 for (let i = 65; i < 90; ++i) {
     const char = String.fromCharCode(i);
@@ -47,6 +47,7 @@ for (let i = 65; i < 90; ++i) {
     4: type
 */
 let config = [0, 11, 11, 0, 0];
+const Config = Object.freeze({ LETTER: 0, DURATION: 1, QUESTIONS: 2, USERNAME: 3, TYPE: 4 });
 
 // game data
 let leaderId = "";
@@ -100,8 +101,8 @@ function countDown() {
             ++letterType; // % 3 == 0 means contains
             currQuestion = -1;
             submissionCount = 0;
-            submissions = Array.from({ length: config[2] + 1 }, () => []);
-            selectedOptions = Array.from({ length: config[2] + 1 }, () => new Map());
+            submissions = Array.from({ length: config[Config.QUESTIONS] + 1 }, () => []);
+            selectedOptions = Array.from({ length: config[Config.QUESTIONS] + 1 }, () => new Map());
             
             selectedOptions.forEach((_, qIndex) => {
                 players.forEach((value, key) => {
@@ -132,7 +133,7 @@ function sendData(id) {
 
         // answering
         case 1:
-            sendMessage("questions", { questions, letter, letterType, type: config[4] }, id);
+            sendMessage("questions", { questions, letter, letterType, type: config[Config.TYPE] }, id);
             break;
 
         // voting
@@ -142,11 +143,12 @@ function sendData(id) {
             sendMessage("answers", { 
                 question: questions[currQuestion], 
                 number: currQuestion, 
-                answerCount: config[2] + 1, 
+                answerCount: config[Config.QUESTIONS] + 1, 
                 info: Array.from(players.entries()), 
-                shldShowUsername: config[3] == 0, 
+                shldShowUsername: config[Config.USERNAME] == 0, 
                 answers: submissions[currQuestion],
-                selectedOptions: Array.from(selectedOptions[currQuestion])
+                selectedOptions: Array.from(selectedOptions[currQuestion]),
+                isType2: config[Config.TYPE] == 1
             }, id);
             break;
     }
@@ -167,7 +169,7 @@ function goNext() {
     }
 
     // last question
-    if (currQuestion == config[2]) {
+    if (currQuestion == config[Config.QUESTIONS]) {
         phase = 0;
         sendMessage("transit", { to: phase });
     } else {
@@ -265,11 +267,11 @@ callbacks.set("transit", ({ to }) => {
         case 1:
 
             // prepare randomly selected questions
-            questions = (config[4] == 0 ? questions1 : questions2).sort((a, b) => Math.random() - 0.5).slice(0, config[2] + 1).map(q => q.question);
+            questions = (config[Config.TYPE] == 0 ? questions1 : questions2).sort((a, b) => Math.random() - 0.5).slice(0, config[Config.QUESTIONS] + 1).map(q => q.question);
 
             // any letter (server decides)
-            if (config[0] == 0) {
-                if (config[4] == 1 || letterType % 3 == 0) {
+            if (config[Config.LETTER] == 0) {
+                if (config[Config.TYPE] == 1 || letterType % 3 == 0) {
                     letter = containsList[Math.floor(Math.random() * containsList.length)];
                 } else {
                     letter = startsList[Math.floor(Math.random() * startsList.length)];
@@ -277,10 +279,10 @@ callbacks.set("transit", ({ to }) => {
 
             // specific letter (client decided)
             } else {
-                letter = String.fromCharCode(64 + config[0]); // 64 because [0] is any letter
+                letter = String.fromCharCode(64 + config[Config.LETTER]); // 64 because [0] is any letter
             }
 
-            timer = (config[1] + 1) * 10;
+            timer = (config[Config.DURATION] + 1) * 10;
             sendMessage("tick", { timer });
             countDown();
 

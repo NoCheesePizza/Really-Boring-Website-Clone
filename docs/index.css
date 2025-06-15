@@ -77,6 +77,14 @@ body {
     background-color: var(--bgGrey);
 }
 
+#minutes.flash {
+    color: rgba(var(--theme), 0.8);
+}
+
+#seconds.flash {
+    color: rgba(var(--theme), 0.8);
+}
+
 #bigLetter {
     font-size: var(--lSize);
     border: 0.12vw dashed var(--grey);
@@ -93,15 +101,15 @@ body {
 #stopwatch {
     padding-right: 1vw;
     font-size: 1.5vw;
-    color: rgba(var(--theme), 0.75);
+    color: rgba(var(--theme), 0.8);
 }
 
 .timeColumn {
     flex-direction: column;
     display: flex;
     justify-content: center;
-    /* align-items: ; */
     gap: 2vw;
+    width: 8vw;
 }
 
 #instructions {
@@ -665,6 +673,10 @@ body {
     .topRow {
         padding-left: 5vw;
         padding-right: 5vw;
+    }
+
+    .timeColumn {
+        width: 22vw;
     }
     
     #bigLetter {

@@ -14,6 +14,8 @@
     [nah] limit name length
     [done] test voting buttons
     [done] don't hard code top bars height
+    [done] timer flashing
+    [done] bug where capitalised words don't have similarity check
 */
 
 //todo ------------ "global" ------------ //
@@ -90,7 +92,7 @@ function checkValidity(index) {
         // });
         
         setUnanswered(element);
-        chosenAnswers[index] = { input: "", answer: "" /* , identicalIndices: new Set() */ };
+        chosenAnswers[index] = { input: "", answer: "", isValid: true /* , identicalIndices: new Set() */ };
         return;
     }
 
@@ -154,25 +156,44 @@ function checkValidity(index) {
         if (identicalIndices.size != 0) {
             isValid = false;
         }
+
+        // normal for loop because forEach cannot break early
+        for (let i = 0; i < inputs.length; ++i) {
+            if (i != index && chosenAnswers[i].answer == playerAnswer) {
+                isValid = false;
+                break;
+            }
+        }
     */
 
-    // normal for loop because forEach cannot break early
-    for (let i = 0; i < inputs.length; ++i) {
-        if (i != index && inputs[i].textContent == answer) {
-            isValid = false;
-            break;
-        }
-    }
-
     setValidity(isValid, element);
-    chosenAnswers[index] = { input: playerInput, answer: playerAnswer /* , identicalIndices */ };
+    chosenAnswers[index] = { input: playerInput, answer: playerAnswer, isValid /* , identicalIndices */ };
 }
 
-function checkValidityForAll() {
-    inputs.forEach((_, index) => {
-        checkValidity(index);
+// technically can be done during checkValidity() but this is faster
+function checkForDuplicates() {
+    const identicalIndices = new Map(); // word to index (if key is not a primitive, has will do a reference not value check)
+
+    chosenAnswers.forEach(({ answer, isValid }, index) => {
+        if (identicalIndices.has(answer)) {
+            setValidity(false, inputs[identicalIndices.get(answer)]);
+            setValidity(false, inputs[index]);
+
+        } else if (answer != "") {
+            setValidity(isValid, inputs[index]); // set back to original validity
+            identicalIndices.set(answer, index);
+        }
     });
 }
+
+/*
+    function checkValidityForAll() {
+        inputs.forEach((_, index) => {
+            checkValidity(index);
+        });
+        checkForDuplicates();
+    }
+*/
 
 // next invalid or unanswered question, if any, to jump to when enter is pressed (tab will cycle between questions and arrow keys are self explanatory)
 function findNextIndex(currIndex) {
@@ -215,6 +236,7 @@ function addEventListenersAnswering() {
             inputs[index].textContent = input;
             checkValidity(index);
         });
+        checkForDuplicates();
     }
 
     // input override for enter, tab, up arrow, down arrow
@@ -223,7 +245,8 @@ function addEventListenersAnswering() {
             
             // save input on every keystroke, not just when clicking away or pressing the following keys
             if (document.activeElement === element) {
-                checkValidityForAll();
+                checkValidity(index);
+                checkForDuplicates();
                 saveAllInputs();
             }
         });
@@ -241,8 +264,6 @@ function addEventListenersAnswering() {
             if (event.key == "Enter" || event.key == "Tab" || event.key == "ArrowDown" || event.key == "ArrowUp") {
                 event.preventDefault();
                 element.textContent = element.textContent.trim();
-                checkValidityForAll();
-                saveAllInputs();
 
                 if (event.key == "Enter" || event.key == "Tab") {
                     focusAtEnd(inputs[findNextIndex(index)]);
@@ -494,7 +515,7 @@ function sendMessage(header, body) {
     } 
 }
 
-// public endpoint: "wss://my-boring-website.onrender.com", private endpoint: "ws://192.168.1.12:8080" (run ipconfig for address)
+// public endpoint: "wss://my-boring-website.onrender.com", private endpoint: "ws://192.168.1.7:8080" (run ipconfig for address)
 const socket = new WebSocket("wss://my-boring-website.onrender.com");
 const myId = localStorage.getItem("rbw_id") ?? genRandomString(32);
 const callbacks = new Map();
@@ -703,6 +724,9 @@ callbacks.set("questions", ({ questions, letter, letterType, type }) => {
         document.getElementById("restart").style.display = "none";
     }
 
+    document.getElementById("minutes").classList.remove("flash");
+    document.getElementById("seconds").classList.remove("flash");
+
     // set letter and instructions
     document.getElementById("bigLetter").textContent = letter;
     document.getElementById("instructions").textContent = "Please enter words or phrases that " +
@@ -777,7 +801,7 @@ callbacks.set("questions", ({ questions, letter, letterType, type }) => {
 */
 
 // answers = array of { input, answer, votes, score, id, username }
-callbacks.set("answers", ({ question, number, answerCount, info, shldShowUsername, answers, selectedOptions }) => {
+callbacks.set("answers", ({ question, number, answerCount, info, shldShowUsername, answers, selectedOptions, isType2 }) => {
     const players = new Map(info);
 
     // set question number and content
@@ -833,7 +857,7 @@ callbacks.set("answers", ({ question, number, answerCount, info, shldShowUsernam
         }
 
         // answer content varies between type 1 & 2
-        aContentDiv.appendChild(document.createTextNode(input == answer ? input : `${input} (${answer})`));
+        aContentDiv.appendChild(document.createTextNode(isType2 ? `${input} (${answer})` : input));
         
         const aRightDiv = document.createElement("div");
         aRightDiv.classList.add("aRight");
@@ -910,8 +934,22 @@ callbacks.set("answers", ({ question, number, answerCount, info, shldShowUsernam
 callbacks.set("tick", ({ timer }) => {
     const minutes = Math.floor(timer / 60);
     const seconds = timer - minutes * 60;
-    document.getElementById("minutes").textContent = String(minutes).padStart(2, "0");
-    document.getElementById("seconds").textContent = String(seconds).padStart(2, "0");
+    const minutesSpan = document.getElementById("minutes");
+    const secondsSpan = document.getElementById("seconds");
+
+    minutesSpan.textContent = String(minutes).padStart(2, "0");
+    secondsSpan.textContent = String(seconds).padStart(2, "0");
+
+    // flash theme color when time about to run out
+    if (seconds < 10 && minutes == 0) {
+        if (seconds % 2 == 0) {
+            minutesSpan.classList.remove("flash");
+            secondsSpan.classList.remove("flash");
+        } else {
+            minutesSpan.classList.add("flash");
+            secondsSpan.classList.add("flash");
+        }
+    }
 });
 
 callbacks.set("submit", ({}) => {
