@@ -1,7 +1,57 @@
-//todo prevent players who joined while a game is ongoing to view
-
 const WebSocket = require("ws");
-const fs = require("fs");
+const https = require("https");
+// require("dotenv").config(); // comment out when deploying
+
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+if (GOOGLE_API_KEY == null) {
+    console.error("Google API key not found");
+    return;
+}
+
+const questions1 = [];
+const questions2 = [];
+const DOC_ID_1 = "1ARC0Y7-8li-Jom5VNxh5XbZHOYIwMuujIMwUVrfvZVI"; // feel free to peruse
+const DOC_ID_2 = "1tkLbScU7nd8iLBDFNzT3y5mtEELULt6jtrxeE6uR4K4"; // feel free to peruse
+
+function pullQuestions(type) {
+    https.get(`https://www.googleapis.com/drive/v3/files/${type == 1 ? DOC_ID_1 : DOC_ID_2}/export?mimeType=text/plain&key=${GOOGLE_API_KEY}`, res => {
+        if (res.statusCode != 200) {
+            console.error("Unable to connect to My Boring Bank");
+            res.resume();
+            return;
+        }
+
+        let body = "";
+        res.setEncoding("utf-8");
+        res.on("data", chunk => body += chunk); 
+        res.on("end", () => {
+            
+            // slice(1) to ignore first element which is tab name
+            if (type == 1) {
+                body.split("\n").slice(1).map(line => {
+                    const question = line.split("#")[0].trim(); // Get text before first hash
+                    const tags = [...line.matchAll(/#([^#\n\r]+)/g)].map(m => m[1].trim()); // Find all that satisfy the format #<any number of at least 1 characters that are not newline, return or hash>
+                    questions1.push({ question, tags });
+                });
+
+            } else {
+                body.split("\n").slice(1).map(line => {
+                    const question = line.trim();
+                    const tags = [];
+                    questions2.push({ question, tags });
+                });
+            }
+        });
+        
+    }).on("error", error => {
+        console.error("Error making HTTPS request: " + error);
+        return;
+    });
+}
+
+// comment these out if someone other than me is running locally
+pullQuestions(1);
+pullQuestions(2);
 
 // server data
 const wss = new WebSocket.Server({ host: "0.0.0.0", port: process.env.port || 8080 });
@@ -11,16 +61,11 @@ let dcedPlayers = new Map(); // same as above
 const callbacks = new Map();
 
 // fixed data  (include "Backend/" if running via vs code)
-const questions1 = fs.readFileSync("questions1.txt", "utf-8").split("\n").map(line => {
-    const question = line.split("#")[0].trim(); // Get text before first hash
-    const tags = [...line.matchAll(/#([^#\n\r]+)/g)].map(m => m[1].trim()); // Find all that satisfy the format #<any number of at least 1 characters that are not newline, return or hash>
-    return { question, tags };
-});
-const questions2 = fs.readFileSync("questions2.txt", "utf-8").split("\n").map(line => {
-    const question = line.trim();
-    const tags = [];
-    return { question, tags};
-});
+// const questions2 = fs.readFileSync("questions2.txt", "utf-8").split("\n").map(line => {
+//     const question = line.trim();
+//     const tags = [];
+//     return { question, tags };
+// });
 const points = [-2, -1, 0, 1, 2];
 
 // (start - QXYZ, contain - JKQXZ) -> <1% usage according to wikipedia (but can override if "any" not selected)
