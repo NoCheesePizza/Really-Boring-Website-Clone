@@ -34,7 +34,7 @@ let tickedTags = new Set();
 let crossedTags = new Set();
 
 async function pullQuestions(type) {
-    if (type != 0 || type != 1) {
+    if (type != 0 && type != 1) {
         return;
     }
 
@@ -50,15 +50,16 @@ async function pullQuestions(type) {
     crossedQuestions[type] = new Set();
 
     try {
-        const { data: html } = await axios.get("https://docs.google.com/document/d/e/" + (type == 1 ? 
+        const { data: html } = await axios.get("https://docs.google.com/document/d/e/" + (type == 0 ? 
             "2PACX-1vQBmAtv8p3bzHsJv8wHdsqwdAp_rAXw-8PMV2vWwaTvvkEe6AOCriE04BY4WoP681xo_advjQP_7oF2" :
             "2PACX-1vSFl8EhS7OlDklM4sLGLSh6SiLPrKlkc55IscpAXAI_B1BzaI4SShD5IeOGVBdqaTfVnQqm0DHiJH-S") + "/pub");
         const dom = cheerio.load(html);
         
-        dom("span.c0").each((index, element) => {
+        // swaps between c0 and c1
+        dom("span.c0").length == 0 ? dom("span.c1") : dom("span.c0").each((index, element) => {
             const line = dom(element).text().trim();
             if (type == 0) {
-                
+
                 // Find all that satisfy the format #<any number of at least 1 characters that are not newline, return or hash>
                 const question = line.split("#")[0].trim(); // Get text before first hash
                 const tags = [...line.matchAll(/#([^#\n\r]+)/g)].map(m => m[1].trim());
@@ -382,7 +383,7 @@ callbacks.set("transit", ({ to }) => {
         case 1:
 
             // prepare randomly selected questions
-            questions = (questionRepo[Config.TYPE]).sort((a, b) => Math.random() - 0.5).slice(0, config[Config.QUESTIONS] + 1).map(q => q.question);
+            questions = (questionRepo[config[Config.TYPE]]).sort((a, b) => Math.random() - 0.5).slice(0, config[Config.QUESTIONS] + 1).map(q => q.question);
 
             // any letter (server decides)
             if (config[Config.LETTER] == 0) {

@@ -653,6 +653,55 @@ body {
     background-color:rgba(var(--theme), 0.67);
 }
 
+/** bank **/
+
+#bank {
+    height: 0vh;
+    padding-top: 5vh;
+    padding-right: 5vw;
+    padding-left: 5vw;
+    /* height: 0vh; */
+}
+
+.tabs {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    height: 6.5vh;
+}
+
+.tab {
+    cursor: pointer;
+    border-radius: 0vw 1.5vw 0vw 0vw;
+    border-width: 0.1vw 0vw 0vw 0.1vw;
+    border-style: solid;
+    border-color: var(--grey);
+    width: 5vw;
+    white-space: nowrap;        
+    overflow: hidden;           
+    text-overflow: ellipsis;
+    padding-left: 1vw;
+    padding-right: 0.5vw;
+    background-color: var(--bgGrey);
+    transform: translateY(0.5vh);
+    /* margin-top: 1.7vh; */
+    transition: all 0.5s ease;
+    height: 5vh;
+}
+
+.tab.selected {
+    width: 12vw;
+    border-width: 0.1vw 0vw 0vw 0.1vw;
+    height: 5.7vh;
+    /* margin-top: 0vh; */
+}
+
+.tabContainer {
+    border-radius: 0vw 3vw 3vw 3vw;
+    border: 0.1vw solid var(--grey);
+    height: 80vh;
+} 
+
 /* Responsive override for phones */
 @media only screen and (orientation: portrait) {
     :root {

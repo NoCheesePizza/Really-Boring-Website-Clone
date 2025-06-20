@@ -495,6 +495,18 @@ document.getElementById("startGame").addEventListener("click", _ => {
     sendMessage("transit", { to: 1 });
 });
 
+//todo ------------ bank ------------ //
+
+const tabs = document.querySelectorAll(".tab");
+tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+        tabs.forEach(innerTab => {
+            innerTab.classList.remove("selected");
+        });
+        tab.classList.add("selected");
+    });
+});
+
 //todo ------------ server logic ------------ //
 
 function genRandomString(length) {
@@ -516,7 +528,7 @@ function sendMessage(header, body) {
 }
 
 // public endpoint: "wss://my-boring-website.onrender.com", private endpoint: "ws://192.168.1.7:8080" (run ipconfig for address)
-const socket = new WebSocket("wss://my-boring-website.onrender.com");
+const socket = new WebSocket("ws://10.132.63.238:8080");
 const myId = localStorage.getItem("rbw_id") ?? genRandomString(32);
 const callbacks = new Map();
 
