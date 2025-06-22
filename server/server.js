@@ -58,7 +58,7 @@ async function pullQuestions(type) {
         const dom = cheerio.load(html);
         
         // swaps between c0 and c1
-        dom("span.c0").length == 0 ? dom("span.c1") : dom("span.c0").each((index, element) => {
+        (dom("span.c0").length == 0 ? dom("span.c1") : dom("span.c0")).each((index, element) => {
             const line = dom(element).text().trim();
             if (type == 0) {
 
@@ -128,8 +128,8 @@ pullQuestions(1);
 
 // http server (which is reused for websocket)
 const server = http.createServer((req, res) => {
-    console.log("incoming message");
     const key = `${req.method} ${url.parse(req.url, true).pathname}`;
+    
     if (apis.has(key)) {
         apis.get(key)(req, res);
     } else {
