@@ -172,8 +172,7 @@ body {
     position: relative;
     z-index: 1;
     caret-color: rgba(var(--theme), 0.75);
-    caret-shape:underscore;
-    align-self:flex-end;
+    align-self: flex-end;
     padding-left: 0.6vw;
 }
 
@@ -700,7 +699,46 @@ body {
     border-radius: 0vw 3vw 3vw 3vw;
     border: 0.1vw solid var(--grey);
     height: 80vh;
+    padding: 1vw;
 } 
+
+.bankRow {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    height: 2vw;
+    padding: 0.5vw;
+}
+
+.checkBox {
+    border-radius: 50%;
+    border: 0.1vw solid var(--lgrey);
+    height: 2vw;
+    width: 2vw;
+    margin-right: 2vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.checkMark {
+    color: var(--grey);
+    font-size: var(--sSize);
+}
+
+.bankNum {
+    width: 6.5vw;
+}
+
+.bankContent {
+    width: 75vw;
+    overflow-wrap: anywhere;
+}
+
+.bankCount {
+    color: var(--grey);
+    padding-left: 1vw;
+}
 
 /* Responsive override for phones */
 @media only screen and (orientation: portrait) {

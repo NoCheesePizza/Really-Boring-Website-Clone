@@ -1,6 +1,8 @@
 const WebSocket = require("ws");
 const axios = require("axios");
 const cheerio = require("cheerio");
+const http = require("http");
+const url = require("url");
 
 /*
     tags can be (from lowest to highest priority):
@@ -124,8 +126,31 @@ function buildPoolFromTags() {
 pullQuestions(0);
 pullQuestions(1);
 
+// http server (which is reused for websocket)
+const server = http.createServer((req, res) => {
+    console.log("incoming message");
+    const key = `${req.method} ${url.parse(req.url, true).pathname}`;
+    if (apis.has(key)) {
+        apis.get(key)(req, res);
+    } else {
+        res.writeHead(404);
+        res.end("endpoint does not exist");
+    }
+});
+
+const apis = new Map(); // map of { method (get, post, put, delete, etc), path (/...) } : callback
+
+apis.set("GET /test", (req, res) => {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("works");
+});
+
+server.listen(process.env.port || 8080, "0.0.0.0", () => {
+    console.log("started server");
+});
+
 // server data
-const wss = new WebSocket.Server({ host: "0.0.0.0", port: process.env.port || 8080 });
+const wss = new WebSocket.Server({ server });
 const players = new Map(); // id (string) to { username, score, deltaScore, isNew, theme }
 const sockets = new Map(); // id to ws
 let dcedPlayers = new Map(); // same as above
