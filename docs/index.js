@@ -495,17 +495,12 @@ document.getElementById("startGame").addEventListener("click", _ => {
     sendMessage("transit", { to: 1 });
 });
 
-//todo ------------ bank ------------ //
-
-const tabs = document.querySelectorAll(".tab");
-tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-        tabs.forEach(innerTab => {
-            innerTab.classList.remove("selected");
-        });
-        tab.classList.add("selected");
-    });
-});
+// view question bank button
+function goToBank() {
+    document.getElementById("home").style.display = "none";
+    document.getElementById("bank").style.display = "block";
+    document.getElementById("tagsTab").click();
+}
 
 //todo ------------ server logic ------------ //
 
@@ -528,7 +523,7 @@ function sendMessage(header, body) {
 }
 
 // public endpoint: "wss://my-boring-website.onrender.com", private endpoint: "ws://localhost:8080"
-const socket = new WebSocket("wss://my-boring-website.onrender.com");
+const socket = new WebSocket("ws://localhost:8080");
 const myId = localStorage.getItem("rbw_id") ?? genRandomString(32);
 const callbacks = new Map();
 
@@ -566,7 +561,7 @@ socket.addEventListener("message", message => {
 // show loading page after 1 s if not connected
 setTimeout(() => {
     if (!isConnected) {
-        document.getElementById("loading").style.display = "flex";
+        // document.getElementById("loading").style.display = "flex";
     }
 }, 1000);
 
@@ -729,7 +724,6 @@ callbacks.set("questions", ({ questions, letter, letterType, type }) => {
     chosenQuestions = questions;
 
     // hide restart button if not leader
-    console.log({ isLeader });
     if (isLeader) {
         document.getElementById("restart").style.display = "block";
     } else {
@@ -1007,3 +1001,330 @@ callbacks.set("vote", ({ submission, info }) => {
 callbacks.set("next", ({}) => {
     animateBanners();
 });
+
+/* whole bankRow is a tagDiv
+    <div class="bankRow">
+        <div class="checkBox">
+            <i class="fa-solid fa-circle checkMark"></i>
+        </div>
+        <div class="bankNum">1.</div>
+        <div class="bankContent">#Linguistics
+            <span class="bankCount">(10)</span>
+        </div>
+    </div>
+*/
+
+function buildTagDivs() {
+    parentDiv = document.getElementById("tags");
+    parentDiv.innerHTML = "";
+    tagDivs = []; // bank rows
+
+    tagRepo.forEach((tag, index) => {
+        const tagDiv = document.createElement("div");
+        tagDiv.classList.add("bankRow");
+
+        const checkBoxDiv = document.createElement("div");
+        checkBoxDiv.classList.add("checkBox");
+
+        const checkBoxI = document.createElement("i");
+
+        const bankNumDiv = document.createElement("div");
+        bankNumDiv.classList.add("bankNum");
+        bankNumDiv.textContent = `${index + 1}.`;
+
+        const bankContentDiv = document.createElement("div");
+        bankContentDiv.classList.add("bankContent");
+        bankContentDiv.textContent = `#${tag.content}`;
+        bankContentDiv.style.color = tag.color;
+
+        const bankCountSpan = document.createElement("span");
+        bankCountSpan.classList.add("bankCount");
+        bankCountSpan.textContent = `(${tag.count})`;
+
+        checkBoxDiv.appendChild(checkBoxI);
+        bankContentDiv.appendChild(bankCountSpan);
+
+        tagDiv.appendChild(checkBoxDiv);
+        tagDiv.appendChild(bankNumDiv);
+        tagDiv.appendChild(bankContentDiv);
+
+        tagDivs.push(tagDiv);
+        parentDiv.appendChild(tagDiv);
+    });
+}
+
+/* whole bankRow is a questionDiv
+    <div class="bankRow">
+        <div class="checkBox">
+            <i class="fa-solid fa-circle checkMark"></i>
+        </div>
+        <div class="bankNum">1.</div>
+        <div class="bankContent">Stores that food or drinks in Singapore
+            <span class="bankCount">#Singapore</span>
+            <span class="bankCount">#Culinary</span>
+        </div>
+    </div>
+*/
+
+function buildQuestionDivs(type) {
+    if (type < 0 || type > 1) {
+        return;
+    }
+
+    parentDiv = document.getElementById(type == 0 ? "questions1" : "questions0");
+    parentDiv.innerHTML = "";
+    questionDivs[type] = []; // bank rows
+
+    questionRepo[type].forEach((question, index) => {
+        const questionDiv = document.createElement("div");
+        questionDiv.classList.add("bankRow");
+
+        const checkBoxDiv = document.createElement("div");
+        checkBoxDiv.classList.add("checkBox");
+
+        const checkBoxI = document.createElement("i");
+
+        const bankNumDiv = document.createElement("div");
+        bankNumDiv.classList.add("bankNum");
+        bankNumDiv.textContent = `${index + 1}.`;
+
+        const bankContentDiv = document.createElement("div");
+        bankContentDiv.classList.add("bankContent");
+        bankContentDiv.textContent = `#${question.content}`;
+
+        question.tags.forEach(tagIndex => {
+            const bankCountSpan = document.createElement("span");
+            bankCountSpan.classList.add("bankCount");
+            bankCountSpan.textContent = `#${tagRepo[tagIndex].content}`;
+            bankCountSpan.style.color = tagRepo[tagIndex].color;
+        })
+
+        checkBoxDiv.appendChild(checkBoxI);
+        bankContentDiv.appendChild(bankCountSpan);
+
+        questionDiv.appendChild(checkBoxDiv);
+        questionDiv.appendChild(bankNumDiv);
+        questionDiv.appendChild(bankContentDiv);
+
+        questionDivs[type].push(questionDiv);
+        parentDiv.appendChild(questionDiv);
+    });
+}
+
+/*
+function buildQuestions1Map() {
+    question1Map = new Map();
+
+    questionRepo[0].forEach((question, questionIndex) => {
+        question.tagIndices.forEach(tagIndex => {
+            if (!question1Map.has(tagIndex)) {
+                question1Map.set(tagIndex, []);
+            }
+
+            question1Map.get(tagIndex).push(questionIndex);
+        });
+    });
+}
+*/
+
+callbacks.set("bank", ({ _tagRepo, _questionRepo, _tickedQuestions, _crossedQuestions, _tickedTags, _crossedTags }) => {
+    tagRepo = _tagRepo;
+    questionRepo = _questionRepo;
+    tickedQuestions = _tickedQuestions;
+    crossedQuestions = _crossedQuestions;
+    tickedTags = _tickedTags;
+    crossedTags = _crossedTags;
+
+    buildTagDivs();
+    buildQuestionDivs(0);
+    buildQuestionDivs(1);
+
+    // set check boxes for questions
+    // checkedQuestions.forEach((map, type) => {
+    //     map.forEach((value, key) => {
+    //         setQuestionIcon(key, value, type);
+    //     });
+    // });
+});
+
+//todo ------------ bank ------------ //
+
+// logic
+let tagRepo = []; // array of { content (string), color (string), count (number), questionIndices (array of numbers) }
+let questionRepo = [[], []]; // array of { content (string) : tagIndices (set of numbers) } for both types
+let question1Pool = new Set(); // set of questionIndex (number) for type 1 only, not inclusive of ticked/crossedQuestions
+
+// logic
+let tickedQuestions = [new Set(), new Set()]; // set of questionIndex (number) for both types
+let crossedQuestions = [new Set(), new Set()]; // set of questionIndex (number) for both types
+let tickedTags = new Set(); // set of tagIndex (number)
+let crossedTags = new Set(); // set of tagIndex (number)
+
+// ui
+const Option = Object.freeze({ UNCHECKED: 0, TICKED: 1, CROSSED: 2 });
+const optionIcons = ["fa-solid fa-circle checkMark", "fas fa-check checkMark", "fa-solid fa-xmark"];
+let tagDivs = []; // array of tags (element)
+let questionDivs = [[], []]; // array of questions (element) for both types
+
+const tabs = document.querySelectorAll(".tab");
+tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+        tabs.forEach(innerTab => {
+            innerTab.classList.remove("selected");
+        });
+        tab.classList.add("selected");
+    });
+});
+
+function clickTag(_index) {
+    sendMessage("clickTag", { _index });
+}
+
+function clickQuestion(_index, _type) {
+    if (_type < 0 || _type > 1) {
+        return;
+    }
+
+    sendMessage("clickQuestion", { _index, _type });
+}
+
+function setTagIcon(index, option) {
+    if (index < 0 || index >= tagDivs.length) {
+        return;
+    }
+
+    const bankRow = tagDivs[index];
+    const checkBoxI = bankRow.querySelector(".i");
+    const bankNumDiv = bankRow.querySelector(".bankNum");
+    const bankContentDiv = bankRow.querySelector(".bankContent");
+    
+    // set icon for check box
+    optionIcons[option].split(" ").forEach(cls => {
+        checkBoxI.classList.add(cls)
+    });
+
+    switch (option) {
+        case Option.TICKED:
+            bankNumDiv.classList.remove("unused");
+            bankContentDiv.classList.remove("unused");
+            break;
+            
+        case Option.UNCHECKED:
+        case Option.CROSSED:
+            bankNumDiv.classList.add("unused");
+            bankContentDiv.classList.add("unused");
+            break;
+    }
+}
+
+// type == 0 for type 1, type == 1 for type 2
+function setQuestionIcon(index, option, type) {
+    if (type < 0 || type > 1 || index < 0 || index >= questionDivs[type].length) {
+        return;
+    }
+
+    const bankRow = questionDivs[type][index];
+    const checkBoxI = bankRow.querySelector(".i");
+    const bankNumDiv = bankRow.querySelector(".bankNum");
+    const bankContentDiv = bankRow.querySelector(".bankContent");
+    
+    // set icon for check box
+    optionIcons[option].split(" ").forEach(cls => {
+        checkBoxI.classList.add(cls)
+    });
+
+    // type 1 needs to check for extra stuff before setting unused class
+    if (type == 0) {
+        switch (option) {
+
+            // default to tag's value if type 1 (type 2 does not have this option)
+            case Option.UNCHECKED:
+                if (question1Pool.has(index)) {
+                    bankNumDiv.classList.remove("unused");
+                    bankContentDiv.classList.remove("unused");
+
+                } else {
+                    bankNumDiv.classList.add("unused");
+                    bankContentDiv.classList.add("unused");
+                }
+                break;
+
+            case Option.TICKED:
+                bankNumDiv.classList.remove("unused");
+                bankContentDiv.classList.remove("unused");
+                break;
+
+            case Option.CROSSED:
+                bankNumDiv.classList.add("unused");
+                bankContentDiv.classList.add("unused");
+                break;
+        }
+
+    } else {
+        if (option == Option.TICKED) {
+            bankNumDiv.classList.remove("unused");
+            bankContentDiv.classList.remove("unused");
+
+        } else {
+            bankNumDiv.classList.add("unused");
+            bankContentDiv.classList.add("unused");
+        }
+    }
+}
+
+// only for type 1 (type 2 no tags)
+function buildPoolFromTags() {
+
+    // set union
+    tickedTags.forEach(tagIndex => {
+        question1Pool = question1Pool.union(tagRepo[tagIndex].questionIndices);
+    });
+
+    // set difference (after union because exclusion has higher priority)
+    crossedTags.forEach(tagIndex => {
+        question1Pool = question1Pool.difference(tagRepo[tagIndex].questionIndices);
+    });
+}
+
+function clickTags() {
+    document.getElementById("tags").style.display = "block";
+    document.getElementById("questions1").style.display = "none";
+    document.getElementById("questions2").style.display = "none";
+
+    // redraw all tags check boxes and opacity correctly (the div should already exist)
+    tagRepo.forEach((tag, index) => {
+        setTagIcon(index, Option.UNCHECKED);
+    });
+    tickedTags.forEach(tagIndex => { 
+        setTagIcon(tagIndex, Option.TICKED);
+    });
+    crossedTags.forEach(tagIndex => {
+        setTagIcon(tagIndex, Option.CROSSED);
+    });
+}
+
+function clickQuestions1() {
+    document.getElementById("tags").style.display = "none";
+    document.getElementById("questions1").style.display = "block";
+    document.getElementById("questions2").style.display = "none";
+
+    // set all unchecked (which will also check for pool)
+    // set ticks/crosses
+}
+
+function clickQuestions2() {
+    document.getElementById("tags").style.display = "none";
+    document.getElementById("questions1").style.display = "none";
+    document.getElementById("questions2").style.display = "block";
+
+    // set all ticked
+    // set crosses
+}
+
+function goBack() {
+    document.getElementById("bank").style.display = "none";
+    document.getElementById("home").style.display = "block";
+}
+
+function pullBank() {
+}

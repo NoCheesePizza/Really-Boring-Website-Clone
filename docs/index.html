@@ -14,30 +14,44 @@
   <style>
   </style>
   <body>
-    <div id="bank" style="display: none">
+    <div id="bank" style="display: block">
       <div class="tabs">
-        <div class="tab">Tags</div>
-        <div class="tab">Questions 1</div>
-        <div class="tab">Questions 2</div>
+        <div class="tab" onclick="clickTags()" id="tagsTab">Tags</div>
+        <div class="tab" onclick="clickQuestions1()">Questions 1</div>
+        <div class="tab" onclick="clickQuestions2()">Questions 2</div>
+      </div>
+      <div class="circleButton" id="download" onclick="pullBank()">
+        <i class="fa-solid fa-cloud-arrow-down"></i>
+      </div>
+      <div class="circleButton" id="goBack" onclick="goBack()">
+        <i class="fa-solid fa-arrow-left"></i>
       </div>
       <div class="tabContainer">
-        <div class="bankRow">
-          <div class="checkBox">
-            <i class="fa-solid fa-circle checkMark"></i>
+        <div class="scrollRegion" id="tags" style="display: none;">
+          <div class="bankRow">
+            <div class="checkBox">
+              <i class="fa-solid fa-circle checkMark"></i>
+            </div>
+            <div class="bankNum unused">1.</div>
+            <div class="bankContent unused">#Linguistics
+              <span class="bankCount">(10)</span>
+            </div>
           </div>
-          <div class="bankNum">1.</div>
-          <div class="bankContent">#Linguistics
-            <span class="bankCount">(10)</span>
+          <div class="bankRow">
+            <div class="checkBox">
+              <i class="fas fa-check checkMark"></i>
+            </div>
+            <div class="bankNum">1000.</div>
+            <div class="bankContent">#CodingSpe     overflow-wrap: anywhere;     overflow-wrap: anywhere;     overflow-wrap: anywhere;     overflow-wrap: anywhere;    overflow-wrap: anywhere;    overflow-wrap: anywhere;    overflow-wrap: anywhere;    overflow-wrap: anywhere;    overflow-wrap: anywhere;    overflow-wrap: anywhere;
+              <span class="bankCount">(10)</span>
+            </div>
           </div>
         </div>
-        <div class="bankRow">
-          <div class="checkBox">
-            <i class="fas fa-check checkMark"></i>
-          </div>
-          <div class="bankNum">1000.</div>
-          <div class="bankContent">#CodingSpe     overflow-wrap: anywhere;     overflow-wrap: anywhere;     overflow-wrap: anywhere;     overflow-wrap: anywhere;    overflow-wrap: anywhere;    overflow-wrap: anywhere;    overflow-wrap: anywhere;    overflow-wrap: anywhere;    overflow-wrap: anywhere;    overflow-wrap: anywhere;
-            <span class="bankCount">(10)</span>
-          </div>
+        <div class="scrollRegion" id="questions1" style="display: none">
+
+        </div>
+        <div class="scrollRegion" id="questions2" style="display: none;">
+
         </div>
       </div>
     </div>
@@ -212,10 +226,15 @@
             <input type="color" id="color" value="#32c8fa">
           </div>
         </div>
-        <div class="buttonRow">
-          <div class="configButton" id="startGame" style="display: block;">Start Game</div>
-          <div class="configButton" id="resetGame" style="display: block;">Reset Game</div>
-        </div>
+        <div class="buttonColumn">
+          <div class="buttonRow">
+            <div class="configButton" onclick="goToBank()">View Question Bank</div>
+          </div>
+          <div class="buttonRow">
+            <div class="configButton" id="startGame" style="display: block;">Start Game</div>
+            <div class="configButton" id="resetGame" style="display: block;">Reset Game</div>
+          </div>
+      </div>
       </div>
       <div class="section">
         <div class="pText">Players</div>

@@ -401,8 +401,8 @@ body {
     border: 0.1vw solid var(--lgrey);
     border-radius: 3.5vw;
     width: 34vw;
-    padding-top: 3.5vw;
-    padding-bottom: 3.5vw;
+    padding-top: 3.25vw;
+    padding-bottom: 3.25vw;
     padding-left: 4vw;
     padding-right: 4vw;
     min-height: 30vw;
@@ -622,6 +622,13 @@ body {
     cursor: pointer;
 }
 
+.buttonColumn {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.75vw;
+}
+
 .buttonRow {
     display: flex;
     justify-content: space-between;
@@ -662,6 +669,36 @@ body {
     /* height: 0vh; */
 }
 
+.circleButton {
+    position: absolute;
+    bottom: 91vh;
+    border-radius: 50%;
+    border: solid 0.1vw var(--grey);
+    width: 3.5vw;
+    height: 3.5vw;
+    align-content: center;
+    text-align: center;
+    font-size: 1.7vw;
+    cursor: pointer;
+    transition: box-shadow 0.5s ease, transform 0.5s ease;
+}
+
+.circleButton:hover {
+    box-shadow: 0vw 0vw 1vw rgba(var(--theme), 0.5);
+}
+
+.circleButton:active {
+    box-shadow: 0vw 0vw 1vw rgba(var(--theme), 1);
+}
+
+#download {
+    right: 10vw;
+}
+
+#goBack {
+    right: 5vw;
+}
+
 .tabs {
     display: flex;
     justify-content: flex-start;
@@ -681,32 +718,44 @@ body {
     text-overflow: ellipsis;
     padding-left: 1vw;
     padding-right: 0.5vw;
-    background-color: var(--bgGrey);
-    transform: translateY(0.5vh);
-    /* margin-top: 1.7vh; */
+    transform: translateY(0.7vh);
     transition: all 0.5s ease;
     height: 5vh;
+    z-index: 10;
 }
 
 .tab.selected {
+    background-color: var(--bgGrey);
     width: 12vw;
     border-width: 0.1vw 0vw 0vw 0.1vw;
-    height: 5.7vh;
-    /* margin-top: 0vh; */
+    height: 6.3vh;
+    transform: translateY(0.2vh);
 }
 
 .tabContainer {
     border-radius: 0vw 3vw 3vw 3vw;
     border: 0.1vw solid var(--grey);
     height: 80vh;
-    padding: 1vw;
-} 
+    overflow: hidden;
+    /* padding: 2.5vw; */
+    position: relative;
+}
+
+.scrollRegion {
+    /* padding-right: -2vw; */
+    position: absolute;
+    overflow-y: auto;
+    height: 90%;
+    width: 95%;
+    left: 2.5%;
+    top: 5%;
+}
 
 .bankRow {
     display: flex;
     justify-content: flex-start;
     align-items: flex-start;
-    height: 2vw;
+    min-height: 2vw;
     padding: 0.5vw;
 }
 
@@ -719,11 +768,16 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    cursor: pointer;
 }
 
 .checkMark {
-    color: var(--grey);
+    color: rgba(var(--theme), 0.75);
     font-size: var(--sSize);
+}
+
+.unused {
+    opacity: 0.5;
 }
 
 .bankNum {
@@ -736,8 +790,8 @@ body {
 }
 
 .bankCount {
-    color: var(--grey);
     padding-left: 1vw;
+    opacity: 0.75;
 }
 
 /* Responsive override for phones */
@@ -934,5 +988,9 @@ body {
     #color {
         width: 15vw;
         height: 5.5vw;
+    }
+
+    .buttonColumn {
+        gap: 1.5vw;
     }
 }
