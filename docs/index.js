@@ -497,6 +497,8 @@ document.getElementById("startGame").addEventListener("click", _ => {
 
 // view question bank button
 function goToBank() {
+    currTab = Tab.TAGS;
+
     document.getElementById("home").style.display = "none";
     document.getElementById("bank").style.display = "block";
     document.getElementById("tagsTab").click();
@@ -1138,13 +1140,60 @@ callbacks.set("bank", ({ _tagRepo, _questionRepo, _tickedQuestions, _crossedQues
     buildTagDivs();
     buildQuestionDivs(0);
     buildQuestionDivs(1);
+});
 
-    // set check boxes for questions
-    // checkedQuestions.forEach((map, type) => {
-    //     map.forEach((value, key) => {
-    //         setQuestionIcon(key, value, type);
-    //     });
-    // });
+callbacks.set("clickTag", ({ index, option }) => {
+    switch (option) {
+        case Option.UNCHECKED:
+            tickedTags.delete(index);
+            crossedTags.delete(index);
+            break;
+
+        case Option.TICKED:
+            tickedTags.add(index);
+            crossedTags.delete(index);
+            break;
+
+        case Option.CROSSED:
+            crossedTags.add(index);
+            tickedTags.delete(index);
+            break;
+    }
+
+    if (currTab == Tab.TAGS) {
+        clickTagsTab();
+    } else {
+        clickQuestionsTab(currTab - 1);
+    }
+});
+
+callbacks.set("clickQuestion", ({ index, option, type }) => {
+    if (type < 0 || type > 1) {
+        return;
+    }
+
+    switch (option) {
+        case Option.UNCHECKED:
+            tickedQuestions[type].delete(index);
+            crossedQuestions[type].delete(index);
+            break;
+
+        case Option.TICKED:
+            tickedQuestions[type].add(index);
+            crossedQuestions[type].delete(index);
+            break;
+
+        case Option.CROSSED:
+            crossedQuestions[type].add(index);
+            tickedQuestions[type].delete(index);
+            break;
+    }
+
+    if (currTab == Tab.TAGS) {
+        clickTagsTab();
+    } else {
+        clickQuestionsTab(currTab - 1);
+    }
 });
 
 //todo ------------ bank ------------ //
@@ -1162,10 +1211,15 @@ let crossedTags = new Set(); // set of tagIndex (number)
 
 // ui
 const Option = Object.freeze({ UNCHECKED: 0, TICKED: 1, CROSSED: 2 });
+const Tab = Object.freeze({ TAGS: 0, QUESTIONS1: 1, QUESTIONS2: 2, NONE: 3 }); // none means not in bank
 const optionIcons = ["fa-solid fa-circle checkMark", "fas fa-check checkMark", "fa-solid fa-xmark"];
+
+// ui
 let tagDivs = []; // array of tags (element)
 let questionDivs = [[], []]; // array of questions (element) for both types
+let currTab = Tab.TAGS; 
 
+// tab switching animation
 const tabs = document.querySelectorAll(".tab");
 tabs.forEach(tab => {
     tab.addEventListener("click", () => {
@@ -1176,16 +1230,16 @@ tabs.forEach(tab => {
     });
 });
 
-function clickTag(_index) {
-    sendMessage("clickTag", { _index });
+function clickTag(index) {
+    sendMessage("clickTag", { index });
 }
 
-function clickQuestion(_index, _type) {
-    if (_type < 0 || _type > 1) {
+function clickQuestion(index, type) {
+    if (type < 0 || type > 1) {
         return;
     }
 
-    sendMessage("clickQuestion", { _index, _type });
+    sendMessage("clickQuestion", { index, type });
 }
 
 function setTagIcon(index, option) {
@@ -1199,9 +1253,7 @@ function setTagIcon(index, option) {
     const bankContentDiv = bankRow.querySelector(".bankContent");
     
     // set icon for check box
-    optionIcons[option].split(" ").forEach(cls => {
-        checkBoxI.classList.add(cls)
-    });
+    checkBoxI.className = optionIcons[option];
 
     switch (option) {
         case Option.TICKED:
@@ -1229,9 +1281,7 @@ function setQuestionIcon(index, option, type) {
     const bankContentDiv = bankRow.querySelector(".bankContent");
     
     // set icon for check box
-    optionIcons[option].split(" ").forEach(cls => {
-        checkBoxI.classList.add(cls)
-    });
+    checkBoxI.className = optionIcons[option]
 
     // type 1 needs to check for extra stuff before setting unused class
     if (type == 0) {
@@ -1286,7 +1336,9 @@ function buildPoolFromTags() {
     });
 }
 
-function clickTags() {
+function clickTagsTab() {
+    currTab = tabs.TAGS;
+
     document.getElementById("tags").style.display = "block";
     document.getElementById("questions1").style.display = "none";
     document.getElementById("questions2").style.display = "none";
@@ -1303,25 +1355,43 @@ function clickTags() {
     });
 }
 
-function clickQuestions1() {
-    document.getElementById("tags").style.display = "none";
-    document.getElementById("questions1").style.display = "block";
-    document.getElementById("questions2").style.display = "none";
+function clickQuestionsTab(type) {
+    if (type < 0 || type > 1) {
+        return;
+    }
 
-    // set all unchecked (which will also check for pool)
-    // set ticks/crosses
-}
+    currTab = type + 1;
 
-function clickQuestions2() {
-    document.getElementById("tags").style.display = "none";
-    document.getElementById("questions1").style.display = "none";
-    document.getElementById("questions2").style.display = "block";
+    // set all unchecked (which will also check for pool) for type 1 and all ticked for type 2
+    for (let i = 0; i < questionDivs[type].length; ++i) {
+        setQuestionIcon(i, type == 0 ? Option.UNCHECKED : Option.TICKED, type);
+    }
 
-    // set all ticked
-    // set crosses
+    if (type == 0) {
+        document.getElementById("tags").style.display = "none";
+        document.getElementById("questions1").style.display = "block";
+        document.getElementById("questions2").style.display = "none";
+
+        // set ticks if type 1
+        tickedQuestions[0].forEach(questionIndex => {
+            setQuestionIcon(questionIndex, Option.TICKED, 0);
+        });
+    
+    } else {
+        document.getElementById("tags").style.display = "none";
+        document.getElementById("questions1").style.display = "none";
+        document.getElementById("questions2").style.display = "block";
+    }
+
+    // set crosses (type 2 ignores ticked questions)
+    crossedQuestions[type].forEach(questionIndex => {
+        setQuestionIcon(questionIndex, Option.CROSSED, type);
+    });
 }
 
 function goBack() {
+    currTab = Tab.NONE;
+
     document.getElementById("bank").style.display = "none";
     document.getElementById("home").style.display = "block";
 }
