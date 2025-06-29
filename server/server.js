@@ -23,33 +23,48 @@ const url = require("url");
     ^ question object in questionRepo (formerly questions1/2) also keeps track of this for rendering purposes
 */
 
-const Option = Object.freeze({ UNCHECKED: 0, TICKED: 1, CROSSED: 2 });
-let tagRepo = []; // { tag (string), option (enum) }
-let questionRepo = [[], []]; // { question (string), tags (list), option (enum), isInPool (bool) }
-let question1Map = new Map(); // map of tag (string) : questions (set)
-let questionPool = [new Set(), new Set()]; // reconstructed whenever tag options change (not when questions option change)
+// const Option = Object.freeze({ UNCHECKED: 0, TICKED: 1, CROSSED: 2 });
+// let tagRepo = []; // { tag (string), option (enum) }
+// let questionRepo = [[], []]; // { question (string), tags (list), option (enum), isInPool (bool) }
+// let question1Map = new Map(); // map of tag (string) : questions (set)
+// let questionPool = [new Set(), new Set()]; // reconstructed whenever tag options change (not when questions option change)
+
+let tagRepo = []; // array of { content (string), color (string), count (number), questionIndices (array of numbers) }
+let questionRepo = [[], []]; // array of { content (string) : tagIndices (set of numbers) } for both types
+let questionPool = [new Set(), new Set()]; // set of questionIndex (number) for both types
+let wasPoolChanged = [false, false]; // only update pool when game starts if there were changes to the check boxes
 
 // ticked and crossed questions guaranteed no overlap
-let tickedQuestions = [new Set(), new Set()];
-let crossedQuestions = [new Set(), new Set()];
-let tickedTags = new Set();
-let crossedTags = new Set();
+let tickedQuestions = [new Set(), new Set()]; // set of questionIndex (number) for both types
+let crossedQuestions = [new Set(), new Set()]; // set of questionIndex (number) for both types
+let tickedTags = new Set(); // set of tagIndex (number)
+let crossedTags = new Set(); // set of tagIndex (number)
+
+const CheckOption = Object.freeze({ UNCHECKED: 0, TICKED: 1, CROSSED: 2 }); // "Option" was taken already :(
+const hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "A", "B", "C", "D", "E", "F"];
+
+function genRandomColor() {
+    let ret = "#";
+    for (let i = 0; i < 6; ++i) {
+        ret += hexValues[Math.floor(Math.random() * hexValues.length)];
+    }
+    return ret;
+}
 
 async function pullQuestions(type) {
-    if (type != 0 && type != 1) {
+    if (type < 0 || type > 1) {
         return;
     }
 
-    if (type == 0) {
-        question1Map = new Map();
-        tickedTags = new Set();
-        crossedTags = new Set();
-    }
-
     questionRepo[type] = [];
-    questionPool[type] = new Set();
+    wasPoolChanged[type] = false;
     tickedQuestions[type] = new Set();
     crossedQuestions[type] = new Set();
+    
+    if (type == 0) {
+        tagRepo = [];
+        tagRepo.push({ content: "Tagless", questionIndices: [] });
+    }
 
     try {
         const { data: html } = await axios.get("https://docs.google.com/document/d/e/" + (type == 0 ? 
@@ -58,69 +73,101 @@ async function pullQuestions(type) {
         const dom = cheerio.load(html);
         
         // swaps between c0 and c1
-        (dom("span.c0").length == 0 ? dom("span.c1") : dom("span.c0")).each((index, element) => {
+        (dom("span.c0").length == 0 ? dom("span.c1") : dom("span.c0")).each((elementIndex, element) => {
             const line = dom(element).text().trim();
             if (type == 0) {
 
                 // Find all that satisfy the format #<any number of at least 1 characters that are not newline, return or hash>
                 const question = line.split("#")[0].trim(); // Get text before first hash
-                const tags = [...line.matchAll(/#([^#\n\r]+)/g)].map(m => m[1].trim());
-                questionRepo[0].push({ question, tags, option: Option.UNCHECKED, isInPool: true });
+                const tags = [...line.matchAll(/#([^#\n\r]+)/g)].map(m => {
+                    m[1].trim()}
+                );
+                // questionRepo[0].push({ question, tags, option: Option.UNCHECKED, isInPool: true });
                 
-                // add same question to various buckets
-                for (const tag of tags) {
+                const tagIndices = [];
+                tags.forEach(tag1 => {
 
-                    // haiz why can't [] insert if it doesn't exist like in cpp
-                    if (!question1Map.has(tag)) {
-                        question1Map.set(tag, new Set());
-                        tagRepo.push({ tag, option: Option.TICKED });
+                    // find tag to add this question to
+                    let tagIndex = 0;
+                    const doesTagExist = tagRepo.some((tag2, index) => {
+                        tagIndex = index;
+                        return tag1 == tag2;
+                    });
+
+                    // create new tag if doesn't exist
+                    if (!doesTagExist) {
+                        tagIndex = tagRepo.length;
+                        tagRepo.push({ content: tag1, color: genRandomColor(), questionIndices: [] }); 
                     }
-                    question1Map.get(tag).add(question);
+
+                    tagIndices.push(tagIndex);
+                    tagRepo[tagIndex].questionIndices.push(elementIndex);
+                });
+
+                // no tags, add to tagless (index 0 of tagRepo)
+                if (tags.length == 0) {
+                    tagRepo[0].questionIndices.push(elementIndex);
+                    tagIndices.push(0);
                 }
 
+                questionRepo[0].push({ content: question, tagIndices });
+
+                // add same question to various buckets
+                // for (const tag of tags) {
+
+                //     // haiz why can't [] insert if it doesn't exist like in cpp
+                //     if (!question1Map.has(tag)) {
+                //         question1Map.set(tag, new Set());
+                //         tagRepo.push({ tag, option: Option.TICKED });
+                //     }
+                //     question1Map.get(tag).add(question);
+                // }
+
             } else {
-                const question = line.trim();
-                const tags = [];
-                questionRepo[1].push({ question, tags, option: Option.UNCHECKED, isInPool: true });
+                questionRepo[1].push({ content: line.trim(), tagIndices: [] });
             }
         });
         
         // add all questions to pool whenever syncing with google docs
         questionPool[type] = new Set(questionRepo[type].map(entry => entry.question));
+
+        // all tags default to ticked
+        if (type == 0) {
+            tickedTags = new Set(Array.from({ length: 5 }));
+            crossedTags 
+        }
         
     } catch (error) {
         console.log(`Error pulling type ${type} questions: ${error}`);
     }
 }
 
-// only for type 1 (unless changed in the future)
-function buildPoolFromTags() {
-    
-    // no tags, just add every question
-    if (question1Map.size == 0) {
-        questionPool[0] = new Set(questionRepo[0]);
-    } else {
-        questionPool[0] = new Set();
+function buildPool(type) {
+    if (type < 0 || type > 1) {
+        return;
     }
 
-    // set union
-    tickedTags.forEach(tag => {
-        questionPool[0] = questionPool[0].union(question1Map.get(tag));
-    });
+    if (type == 0) {
 
-    // set difference (after union because exclusion has higher priority)
-    crossedTags.forEach(tag => {
-        questionPool[0] = questionPool[0].difference(question1Map.get(tag));
-    });
+        // set union
+        tickedTags.forEach(tagIndex => {
+            questionPool[0] = questionPool[0].union(tagRepo[tagIndex].questionIndices);
+        });
+
+        // set difference (after union because exclusion has higher priority)
+        crossedTags.forEach(tag => {
+            questionPool[0] = questionPool[0].difference(question1Map.get(tag));
+        });
+
+        questionPool[0].union(tickedQuestions[0]);
+        
+    // for type 1, everything not crossed is ticked
+    } else {
+        questionPool[1] = new Set(Array.from({ length: questionRepo[1] }));     
+    }
 
     // no difference in order because ticked and crossed questions are mutually exclusive
-    questionPool[0].union(tickedQuestions);
-    questionPool[0].difference(crossedQuestions);
-
-    // to grey out in ui
-    questionRepo[0].forEach(entry => {
-        entry.isInPool = questionPool.has(entry.question);
-    });
+    questionPool[type].difference(crossedQuestions[type]);
 }
 
 pullQuestions(0);
@@ -349,6 +396,16 @@ callbacks.set("enter", ({ id, username, score, deltaScore, theme }) => {
 
     // force everyone to redraw ui (leader might've been changed)
     sendData();
+
+    // send bank data to the new player
+    sendMessage("bank", { 
+        _tagRepo: tagRepo, 
+        _questionRepo: questionRepo, 
+        _tickedQuestions: tickedQuestions, 
+        _crossedQuestions: crossedQuestions,
+        _tickedTags: tickedTags,
+        _crossedTags: crossedTags
+    });
 });
 
 // player changed username
@@ -406,6 +463,8 @@ callbacks.set("transit", ({ to }) => {
 
         // answering
         case 1:
+
+            //todo build question pool
 
             // prepare randomly selected questions
             questions = (questionRepo[config[Config.TYPE]]).sort((a, b) => Math.random() - 0.5).slice(0, config[Config.QUESTIONS] + 1).map(q => q.question);
@@ -530,6 +589,7 @@ callbacks.set("restart", ({}) => {
     shldRestart = true;
 });
 
+/*
 callbacks.set("tag", ({ index, option }) => {
     if (index > -1 && index < tagRepo.length) {
         tagRepo[index].option = option; // for ui
@@ -545,7 +605,7 @@ callbacks.set("tag", ({ index, option }) => {
             crossedTags.add(tag);
         }
 
-        buildPoolFromTags();
+        buildPool();
     }
 });
 
@@ -573,6 +633,64 @@ callbacks.set("question", ({ type, index, option }) => {
         } else {
             buildPoolFromTags();
         }
+    }
+});
+*/
+
+callbacks.set("clickTag", ({ index }) => {
+    if (index < 0 || index >= tagRepo.length) {
+        console.log(`index ${index} out of range of 0 to ${tagRepo.length - 1}`);
+        return;
+    }
+
+    // tick -> cross
+    if (tickedTags.has(index)) {
+        tickedTags.delete(index);
+        crossedTags.add(index);
+        sendMessage({ index, option: CheckOption.CROSSED });
+    
+    // cross -> uncheck
+    } else if (crossedTags.has(index)) {
+        crossedTags.delete(index);
+        sendMessage({ index, option: CheckOption.UNCHECKED });
+    
+    // uncheck -> tick
+    } else {
+        tickedTags.add(index);
+        sendMessage({ index, option: CheckOption.TICKED });
+    }
+});
+
+callbacks.set("clickQuestion", ({ index, type }) => {
+    if (index < 0 || index >= tagRepo.length) {
+        console.log(`index ${index} is out of range of 0 to ${tagRepo.length - 1}`);
+        return;
+    }
+
+    if (type < 0 || type > 1) {
+        console.log(`type ${type} is out of range of 0 to 1`);
+        return;
+    }
+
+    // tick -> cross
+    if (tickedQuestions[type].has(index)) {
+        tickedQuestions[type].delete(index);
+        crossedQuestions[type].add(index);
+        sendMessage({ index, option: CheckOption.CROSSED });
+    
+    // cross -> uncheck (type 1)
+    } else if (crossedQuestions[type].has(index) && type == 0) {
+        crossedQuestions[0].delete(index);
+        sendMessage({ index, option: CheckOption.UNCHECKED });
+    
+    // uncheck -> tick (type 1) or cross -> tick (type 2)
+    } else {
+        if (type == 1) {
+            crossedQuestions[1].delete(index);
+        }
+
+        tickedQuestions[type].add(index);
+        sendMessage({ index, option: CheckOption.TICKED });
     }
 });
 

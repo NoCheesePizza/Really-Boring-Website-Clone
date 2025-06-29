@@ -1041,7 +1041,7 @@ function buildTagDivs() {
 
         const bankCountSpan = document.createElement("span");
         bankCountSpan.classList.add("bankCount");
-        bankCountSpan.textContent = `(${tag.count})`;
+        bankCountSpan.textContent = `(${tag.questionIndices.length})`;
 
         checkBoxDiv.appendChild(checkBoxI);
         bankContentDiv.appendChild(bankCountSpan);
@@ -1144,17 +1144,17 @@ callbacks.set("bank", ({ _tagRepo, _questionRepo, _tickedQuestions, _crossedQues
 
 callbacks.set("clickTag", ({ index, option }) => {
     switch (option) {
-        case Option.UNCHECKED:
+        case CheckOption.UNCHECKED:
             tickedTags.delete(index);
             crossedTags.delete(index);
             break;
 
-        case Option.TICKED:
+        case CheckOption.TICKED:
             tickedTags.add(index);
             crossedTags.delete(index);
             break;
 
-        case Option.CROSSED:
+        case CheckOption.CROSSED:
             crossedTags.add(index);
             tickedTags.delete(index);
             break;
@@ -1173,17 +1173,17 @@ callbacks.set("clickQuestion", ({ index, option, type }) => {
     }
 
     switch (option) {
-        case Option.UNCHECKED:
+        case CheckOption.UNCHECKED:
             tickedQuestions[type].delete(index);
             crossedQuestions[type].delete(index);
             break;
 
-        case Option.TICKED:
+        case CheckOption.TICKED:
             tickedQuestions[type].add(index);
             crossedQuestions[type].delete(index);
             break;
 
-        case Option.CROSSED:
+        case CheckOption.CROSSED:
             crossedQuestions[type].add(index);
             tickedQuestions[type].delete(index);
             break;
@@ -1199,7 +1199,7 @@ callbacks.set("clickQuestion", ({ index, option, type }) => {
 //todo ------------ bank ------------ //
 
 // logic
-let tagRepo = []; // array of { content (string), color (string), count (number), questionIndices (array of numbers) }
+let tagRepo = []; // array of { content (string), color (string), questionIndices (array of numbers) }
 let questionRepo = [[], []]; // array of { content (string) : tagIndices (set of numbers) } for both types
 let question1Pool = new Set(); // set of questionIndex (number) for type 1 only, not inclusive of ticked/crossedQuestions
 
@@ -1210,7 +1210,7 @@ let tickedTags = new Set(); // set of tagIndex (number)
 let crossedTags = new Set(); // set of tagIndex (number)
 
 // ui
-const Option = Object.freeze({ UNCHECKED: 0, TICKED: 1, CROSSED: 2 });
+const CheckOption = Object.freeze({ UNCHECKED: 0, TICKED: 1, CROSSED: 2 }); // "Option" was taken already :(
 const Tab = Object.freeze({ TAGS: 0, QUESTIONS1: 1, QUESTIONS2: 2, NONE: 3 }); // none means not in bank
 const optionIcons = ["fa-solid fa-circle checkMark", "fas fa-check checkMark", "fa-solid fa-xmark"];
 
@@ -1256,13 +1256,13 @@ function setTagIcon(index, option) {
     checkBoxI.className = optionIcons[option];
 
     switch (option) {
-        case Option.TICKED:
+        case CheckOption.TICKED:
             bankNumDiv.classList.remove("unused");
             bankContentDiv.classList.remove("unused");
             break;
             
-        case Option.UNCHECKED:
-        case Option.CROSSED:
+        case CheckOption.UNCHECKED:
+        case CheckOption.CROSSED:
             bankNumDiv.classList.add("unused");
             bankContentDiv.classList.add("unused");
             break;
@@ -1288,7 +1288,7 @@ function setQuestionIcon(index, option, type) {
         switch (option) {
 
             // default to tag's value if type 1 (type 2 does not have this option)
-            case Option.UNCHECKED:
+            case CheckOption.UNCHECKED:
                 if (question1Pool.has(index)) {
                     bankNumDiv.classList.remove("unused");
                     bankContentDiv.classList.remove("unused");
@@ -1299,19 +1299,19 @@ function setQuestionIcon(index, option, type) {
                 }
                 break;
 
-            case Option.TICKED:
+            case CheckOption.TICKED:
                 bankNumDiv.classList.remove("unused");
                 bankContentDiv.classList.remove("unused");
                 break;
 
-            case Option.CROSSED:
+            case CheckOption.CROSSED:
                 bankNumDiv.classList.add("unused");
                 bankContentDiv.classList.add("unused");
                 break;
         }
 
     } else {
-        if (option == Option.TICKED) {
+        if (option == CheckOption.TICKED) {
             bankNumDiv.classList.remove("unused");
             bankContentDiv.classList.remove("unused");
 
@@ -1345,13 +1345,13 @@ function clickTagsTab() {
 
     // redraw all tags check boxes and opacity correctly (the div should already exist)
     tagRepo.forEach((tag, index) => {
-        setTagIcon(index, Option.UNCHECKED);
+        setTagIcon(index, CheckOption.UNCHECKED);
     });
     tickedTags.forEach(tagIndex => { 
-        setTagIcon(tagIndex, Option.TICKED);
+        setTagIcon(tagIndex, CheckOption.TICKED);
     });
     crossedTags.forEach(tagIndex => {
-        setTagIcon(tagIndex, Option.CROSSED);
+        setTagIcon(tagIndex, CheckOption.CROSSED);
     });
 }
 
@@ -1364,7 +1364,7 @@ function clickQuestionsTab(type) {
 
     // set all unchecked (which will also check for pool) for type 1 and all ticked for type 2
     for (let i = 0; i < questionDivs[type].length; ++i) {
-        setQuestionIcon(i, type == 0 ? Option.UNCHECKED : Option.TICKED, type);
+        setQuestionIcon(i, type == 0 ? CheckOption.UNCHECKED : CheckOption.TICKED, type);
     }
 
     if (type == 0) {
@@ -1374,7 +1374,7 @@ function clickQuestionsTab(type) {
 
         // set ticks if type 1
         tickedQuestions[0].forEach(questionIndex => {
-            setQuestionIcon(questionIndex, Option.TICKED, 0);
+            setQuestionIcon(questionIndex, CheckOption.TICKED, 0);
         });
     
     } else {
@@ -1385,7 +1385,7 @@ function clickQuestionsTab(type) {
 
     // set crosses (type 2 ignores ticked questions)
     crossedQuestions[type].forEach(questionIndex => {
-        setQuestionIcon(questionIndex, Option.CROSSED, type);
+        setQuestionIcon(questionIndex, CheckOption.CROSSED, type);
     });
 }
 
