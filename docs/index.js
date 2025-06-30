@@ -497,8 +497,6 @@ document.getElementById("startGame").addEventListener("click", _ => {
 
 // view question bank button
 function goToBank() {
-    currTab = Tab.TAGS;
-
     document.getElementById("home").style.display = "none";
     document.getElementById("bank").style.display = "block";
     document.getElementById("tagsTab").click();
@@ -525,7 +523,7 @@ function sendMessage(header, body) {
 }
 
 // public endpoint: "wss://my-boring-website.onrender.com", private endpoint: "ws://localhost:8080"
-const socket = new WebSocket("ws://localhost:8080");
+const socket = new WebSocket("wss://my-boring-website.onrender.com");
 const myId = localStorage.getItem("rbw_id") ?? genRandomString(32);
 const callbacks = new Map();
 
@@ -557,7 +555,12 @@ socket.addEventListener("open", () => {
 socket.addEventListener("message", message => {
     const msg = JSON.parse(message.data);
     console.log(`received: ${msg.header}`);
-    callbacks.get(msg.header)(msg.body);
+
+    if (callbacks.has(msg.header)) {
+        callbacks.get(msg.header)(msg.body);
+    } else {
+        console.error(`header ${msg.header} does not exist`);
+    }
 });
 
 // show loading page after 1 s if not connected
@@ -1017,7 +1020,7 @@ callbacks.set("next", ({}) => {
 */
 
 function buildTagDivs() {
-    parentDiv = document.getElementById("tags");
+    const parentDiv = document.getElementById("tags");
     parentDiv.innerHTML = "";
     tagDivs = []; // bank rows
 
@@ -1027,6 +1030,7 @@ function buildTagDivs() {
 
         const checkBoxDiv = document.createElement("div");
         checkBoxDiv.classList.add("checkBox");
+        checkBoxDiv.onclick = () => clickTag(index);
 
         const checkBoxI = document.createElement("i");
 
@@ -1036,12 +1040,12 @@ function buildTagDivs() {
 
         const bankContentDiv = document.createElement("div");
         bankContentDiv.classList.add("bankContent");
-        bankContentDiv.textContent = `#${tag.content}`;
+        bankContentDiv.textContent = `${index == 0 ? "" : "#"}${tag.content}`;
         bankContentDiv.style.color = tag.color;
 
         const bankCountSpan = document.createElement("span");
         bankCountSpan.classList.add("bankCount");
-        bankCountSpan.textContent = `(${tag.questionIndices.length})`;
+        bankCountSpan.textContent = `(${tag.questionIndices.size})`;
 
         checkBoxDiv.appendChild(checkBoxI);
         bankContentDiv.appendChild(bankCountSpan);
@@ -1073,7 +1077,7 @@ function buildQuestionDivs(type) {
         return;
     }
 
-    parentDiv = document.getElementById(type == 0 ? "questions1" : "questions0");
+    const parentDiv = document.getElementById(type == 0 ? "questions1" : "questions2");
     parentDiv.innerHTML = "";
     questionDivs[type] = []; // bank rows
 
@@ -1083,6 +1087,7 @@ function buildQuestionDivs(type) {
 
         const checkBoxDiv = document.createElement("div");
         checkBoxDiv.classList.add("checkBox");
+        checkBoxDiv.onclick = () => clickQuestion(index, type);
 
         const checkBoxI = document.createElement("i");
 
@@ -1092,17 +1097,22 @@ function buildQuestionDivs(type) {
 
         const bankContentDiv = document.createElement("div");
         bankContentDiv.classList.add("bankContent");
-        bankContentDiv.textContent = `#${question.content}`;
+        bankContentDiv.textContent = `${question.content}`;
 
-        question.tags.forEach(tagIndex => {
-            const bankCountSpan = document.createElement("span");
-            bankCountSpan.classList.add("bankCount");
-            bankCountSpan.textContent = `#${tagRepo[tagIndex].content}`;
-            bankCountSpan.style.color = tagRepo[tagIndex].color;
+        question.tagIndices.forEach(tagIndex => {
+
+            // don't show "tagless" tag
+            if (tagIndex != 0) {
+                const bankCountSpan = document.createElement("span");
+                bankCountSpan.classList.add("bankCount");
+                bankCountSpan.textContent = `#${tagRepo[tagIndex].content}`;
+                bankCountSpan.style.color = tagRepo[tagIndex].color;
+                
+                bankContentDiv.appendChild(bankCountSpan);
+            }
         })
 
         checkBoxDiv.appendChild(checkBoxI);
-        bankContentDiv.appendChild(bankCountSpan);
 
         questionDiv.appendChild(checkBoxDiv);
         questionDiv.appendChild(bankNumDiv);
@@ -1130,12 +1140,14 @@ function buildQuestions1Map() {
 */
 
 callbacks.set("bank", ({ _tagRepo, _questionRepo, _tickedQuestions, _crossedQuestions, _tickedTags, _crossedTags }) => {
-    tagRepo = _tagRepo;
+    console.log(_tickedQuestions);
+    
+    tagRepo = JSON.parse(_tagRepo).map(tag => ({ content: tag.content, color: tag.color, questionIndices: new Set(tag.questionIndices) }));
     questionRepo = _questionRepo;
-    tickedQuestions = _tickedQuestions;
-    crossedQuestions = _crossedQuestions;
-    tickedTags = _tickedTags;
-    crossedTags = _crossedTags;
+    tickedQuestions = JSON.parse(_tickedQuestions).map(arr => new Set(arr));
+    crossedQuestions = JSON.parse(_crossedQuestions).map(arr => new Set(arr));
+    tickedTags = new Set(JSON.parse(_tickedTags));
+    crossedTags = new Set(JSON.parse(_crossedTags));
 
     buildTagDivs();
     buildQuestionDivs(0);
@@ -1143,6 +1155,8 @@ callbacks.set("bank", ({ _tagRepo, _questionRepo, _tickedQuestions, _crossedQues
 });
 
 callbacks.set("clickTag", ({ index, option }) => {
+    console.log(`currTab: ${currTab}`);
+
     switch (option) {
         case CheckOption.UNCHECKED:
             tickedTags.delete(index);
@@ -1199,7 +1213,7 @@ callbacks.set("clickQuestion", ({ index, option, type }) => {
 //todo ------------ bank ------------ //
 
 // logic
-let tagRepo = []; // array of { content (string), color (string), questionIndices (array of numbers) }
+let tagRepo = []; // array of { content (string), color (string), questionIndices (set of numbers) }
 let questionRepo = [[], []]; // array of { content (string) : tagIndices (set of numbers) } for both types
 let question1Pool = new Set(); // set of questionIndex (number) for type 1 only, not inclusive of ticked/crossedQuestions
 
@@ -1212,12 +1226,12 @@ let crossedTags = new Set(); // set of tagIndex (number)
 // ui
 const CheckOption = Object.freeze({ UNCHECKED: 0, TICKED: 1, CROSSED: 2 }); // "Option" was taken already :(
 const Tab = Object.freeze({ TAGS: 0, QUESTIONS1: 1, QUESTIONS2: 2, NONE: 3 }); // none means not in bank
-const optionIcons = ["fa-solid fa-circle checkMark", "fas fa-check checkMark", "fa-solid fa-xmark"];
+const optionIcons = ["fa-solid fa-circle checkMark", "fas fa-check checkMark", "fa-solid fa-xmark checkMark"];
+let currTab = Tab.NONE;
 
 // ui
 let tagDivs = []; // array of tags (element)
 let questionDivs = [[], []]; // array of questions (element) for both types
-let currTab = Tab.TAGS; 
 
 // tab switching animation
 const tabs = document.querySelectorAll(".tab");
@@ -1248,9 +1262,11 @@ function setTagIcon(index, option) {
     }
 
     const bankRow = tagDivs[index];
-    const checkBoxI = bankRow.querySelector(".i");
+    const checkBoxI = bankRow.querySelector("i");
     const bankNumDiv = bankRow.querySelector(".bankNum");
     const bankContentDiv = bankRow.querySelector(".bankContent");
+
+    console.log(`index: ${index}, size: ${tagDivs.length}, checkBoxI: ${checkBoxI}, bankRow: ${bankRow}`);
     
     // set icon for check box
     checkBoxI.className = optionIcons[option];
@@ -1276,7 +1292,7 @@ function setQuestionIcon(index, option, type) {
     }
 
     const bankRow = questionDivs[type][index];
-    const checkBoxI = bankRow.querySelector(".i");
+    const checkBoxI = bankRow.querySelector("i");
     const bankNumDiv = bankRow.querySelector(".bankNum");
     const bankContentDiv = bankRow.querySelector(".bankContent");
     
@@ -1337,7 +1353,7 @@ function buildPoolFromTags() {
 }
 
 function clickTagsTab() {
-    currTab = tabs.TAGS;
+    currTab = Tab.TAGS;
 
     document.getElementById("tags").style.display = "block";
     document.getElementById("questions1").style.display = "none";
@@ -1358,6 +1374,10 @@ function clickTagsTab() {
 function clickQuestionsTab(type) {
     if (type < 0 || type > 1) {
         return;
+    }
+
+    if (type == 0) {
+        buildPoolFromTags();
     }
 
     currTab = type + 1;

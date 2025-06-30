@@ -772,12 +772,12 @@ body {
 }
 
 .checkMark {
-    color: rgba(var(--theme), 0.75);
+    color: rgba(var(--theme), 0.8);
     font-size: var(--sSize);
 }
 
 .unused {
-    opacity: 0.5;
+    opacity: 0.33;
 }
 
 .bankNum {
@@ -791,7 +791,7 @@ body {
 
 .bankCount {
     padding-left: 1vw;
-    opacity: 0.75;
+    /* opacity: ; */
 }
 
 /* Responsive override for phones */

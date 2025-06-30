@@ -3,6 +3,15 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const http = require("http");
 const url = require("url");
+const fs = require("fs");
+
+Set.prototype.union = function(other) {
+    return new Set([...this, ...other]);
+}
+
+Set.prototype.difference = function(other) {
+    return new Set([...this].filter(x => !other.has(x)));
+}
 
 /*
     tags can be (from lowest to highest priority):
@@ -29,7 +38,7 @@ const url = require("url");
 // let question1Map = new Map(); // map of tag (string) : questions (set)
 // let questionPool = [new Set(), new Set()]; // reconstructed whenever tag options change (not when questions option change)
 
-let tagRepo = []; // array of { content (string), color (string), count (number), questionIndices (array of numbers) }
+let tagRepo = []; // array of { content (string), color (string), count (number), questionIndices (set of numbers) }
 let questionRepo = [[], []]; // array of { content (string) : tagIndices (set of numbers) } for both types
 let questionPool = [new Set(), new Set()]; // set of questionIndex (number) for both types
 let wasPoolChanged = [false, false]; // only update pool when game starts if there were changes to the check boxes
@@ -63,7 +72,7 @@ async function pullQuestions(type) {
     
     if (type == 0) {
         tagRepo = [];
-        tagRepo.push({ content: "Tagless", questionIndices: [] });
+        tagRepo.push({ content: "Tagless", color: "#FFFFFF", questionIndices: new Set() });
     }
 
     try {
@@ -79,11 +88,9 @@ async function pullQuestions(type) {
 
                 // Find all that satisfy the format #<any number of at least 1 characters that are not newline, return or hash>
                 const question = line.split("#")[0].trim(); // Get text before first hash
-                const tags = [...line.matchAll(/#([^#\n\r]+)/g)].map(m => {
-                    m[1].trim()}
-                );
+                const tags = [...line.matchAll(/#([^#\n\r]+)/g)].map(m => m[1].trim());
                 // questionRepo[0].push({ question, tags, option: Option.UNCHECKED, isInPool: true });
-                
+
                 const tagIndices = [];
                 tags.forEach(tag1 => {
 
@@ -91,22 +98,22 @@ async function pullQuestions(type) {
                     let tagIndex = 0;
                     const doesTagExist = tagRepo.some((tag2, index) => {
                         tagIndex = index;
-                        return tag1 == tag2;
+                        return tag1 == tag2.content;
                     });
 
                     // create new tag if doesn't exist
                     if (!doesTagExist) {
                         tagIndex = tagRepo.length;
-                        tagRepo.push({ content: tag1, color: genRandomColor(), questionIndices: [] }); 
+                        tagRepo.push({ content: tag1, color: genRandomColor(), questionIndices: new Set() }); 
                     }
 
                     tagIndices.push(tagIndex);
-                    tagRepo[tagIndex].questionIndices.push(elementIndex);
+                    tagRepo[tagIndex].questionIndices.add(elementIndex);
                 });
 
                 // no tags, add to tagless (index 0 of tagRepo)
                 if (tags.length == 0) {
-                    tagRepo[0].questionIndices.push(elementIndex);
+                    tagRepo[0].questionIndices.add(elementIndex);
                     tagIndices.push(0);
                 }
 
@@ -133,8 +140,8 @@ async function pullQuestions(type) {
 
         // all tags default to ticked
         if (type == 0) {
-            tickedTags = new Set(Array.from({ length: 5 }));
-            crossedTags 
+            tickedTags = new Set(Array.from({ length: tagRepo.length }, (_, index) => index));
+            crossedTags = new Set();
         }
         
     } catch (error) {
@@ -155,13 +162,13 @@ function buildPool(type) {
         });
 
         // set difference (after union because exclusion has higher priority)
-        crossedTags.forEach(tag => {
-            questionPool[0] = questionPool[0].difference(question1Map.get(tag));
+        crossedTags.forEach(tagIndex => {
+            questionPool[0] = questionPool[0].difference(tagRepo[tagIndex].questionIndices);
         });
 
         questionPool[0].union(tickedQuestions[0]);
         
-    // for type 1, everything not crossed is ticked
+    // for type 2, everything not crossed is ticked
     } else {
         questionPool[1] = new Set(Array.from({ length: questionRepo[1] }));     
     }
@@ -255,6 +262,10 @@ let selectedOptions = []; // array of map of (id : array of index (0 == -2, 1 ==
 
 function sendMessage(header, body, id) {
     console.log(`sent: ${header}`);
+
+    if (header == "bank") {
+        console.log(body);
+    }
 
     // send to all players
     if (id === undefined) {
@@ -397,14 +408,16 @@ callbacks.set("enter", ({ id, username, score, deltaScore, theme }) => {
     // force everyone to redraw ui (leader might've been changed)
     sendData();
 
+    console.log({ tickedTags, crossedTags });
+
     // send bank data to the new player
     sendMessage("bank", { 
-        _tagRepo: tagRepo, 
+        _tagRepo: JSON.stringify(tagRepo.map(tag => ({ content: tag.content, color: tag.color, questionIndices: Array.from(tag.questionIndices) }))), 
         _questionRepo: questionRepo, 
-        _tickedQuestions: tickedQuestions, 
-        _crossedQuestions: crossedQuestions,
-        _tickedTags: tickedTags,
-        _crossedTags: crossedTags
+        _tickedQuestions: JSON.stringify(tickedQuestions.map(set => Array.from(set))), 
+        _crossedQuestions: JSON.stringify(crossedQuestions.map(set => Array.from(set))),
+        _tickedTags: JSON.stringify(Array.from(tickedTags)),
+        _crossedTags: JSON.stringify(Array.from(crossedTags))
     });
 });
 
@@ -464,14 +477,25 @@ callbacks.set("transit", ({ to }) => {
         // answering
         case 1:
 
-            //todo build question pool
+            const type = config[Config.TYPE];
+            if (wasPoolChanged[type]) {
+                buildPool(type);
+                wasPoolChanged[type] = false;            
+            }
 
             // prepare randomly selected questions
-            questions = (questionRepo[config[Config.TYPE]]).sort((a, b) => Math.random() - 0.5).slice(0, config[Config.QUESTIONS] + 1).map(q => q.question);
+            console.log(type, questionPool[type]);
+            questions = Array.from(questionPool[type]).sort((a, b) => { 
+                return Math.random() - 0.5;
+            }).slice(0, config[Config.QUESTIONS] + 1).map(questionIndex => {
+                return questionRepo[type][questionIndex].content;
+            });
+
+            fs.writeFileSync("log.txt", Array.from(questionPool[type]).map(index => questionRepo[type][index].content).join("\n"), "utf-8");
 
             // any letter (server decides)
             if (config[Config.LETTER] == 0) {
-                if (config[Config.TYPE] == 1 || letterType % 3 == 0) {
+                if (type == 1 || letterType % 3 == 0) {
                     letter = containsList[Math.floor(Math.random() * containsList.length)];
                 } else {
                     letter = startsList[Math.floor(Math.random() * startsList.length)];
@@ -643,55 +667,72 @@ callbacks.set("clickTag", ({ index }) => {
         return;
     }
 
+    wasPoolChanged[0] = true;
+
     // tick -> cross
     if (tickedTags.has(index)) {
         tickedTags.delete(index);
         crossedTags.add(index);
-        sendMessage({ index, option: CheckOption.CROSSED });
+        sendMessage("clickTag", { index, option: CheckOption.CROSSED });
     
     // cross -> uncheck
     } else if (crossedTags.has(index)) {
         crossedTags.delete(index);
-        sendMessage({ index, option: CheckOption.UNCHECKED });
+        sendMessage("clickTag", { index, option: CheckOption.UNCHECKED });
     
     // uncheck -> tick
     } else {
         tickedTags.add(index);
-        sendMessage({ index, option: CheckOption.TICKED });
+        sendMessage("clickTag", { index, option: CheckOption.TICKED });
     }
 });
 
 callbacks.set("clickQuestion", ({ index, type }) => {
-    if (index < 0 || index >= tagRepo.length) {
-        console.log(`index ${index} is out of range of 0 to ${tagRepo.length - 1}`);
-        return;
-    }
-
     if (type < 0 || type > 1) {
         console.log(`type ${type} is out of range of 0 to 1`);
         return;
     }
-
-    // tick -> cross
-    if (tickedQuestions[type].has(index)) {
-        tickedQuestions[type].delete(index);
-        crossedQuestions[type].add(index);
-        sendMessage({ index, option: CheckOption.CROSSED });
     
-    // cross -> uncheck (type 1)
-    } else if (crossedQuestions[type].has(index) && type == 0) {
-        crossedQuestions[0].delete(index);
-        sendMessage({ index, option: CheckOption.UNCHECKED });
-    
-    // uncheck -> tick (type 1) or cross -> tick (type 2)
-    } else {
-        if (type == 1) {
-            crossedQuestions[1].delete(index);
-        }
-
-        tickedQuestions[type].add(index);
-        sendMessage({ index, option: CheckOption.TICKED });
+    if (index < 0 || index >= questionRepo[type].length) {
+        console.log(`index ${index} is out of range of 0 to ${questionRepo[type].length - 1}`);
+        return;
     }
+
+    wasPoolChanged[type] = true;
+
+    if (type == 0) {
+        
+        // tick -> cross
+        if (tickedQuestions[0].has(index)) {
+            tickedQuestions[0].delete(index);
+            crossedQuestions[0].add(index);
+            sendMessage("clickQuestion", { index, option: CheckOption.CROSSED, type });
+        
+        // cross -> uncheck
+        } else if (crossedQuestions[0].has(index)) {
+            crossedQuestions[0].delete(index);
+            sendMessage("clickQuestion", { index, option: CheckOption.UNCHECKED, type });
+        
+        // uncheck -> tick 
+        } else {
+            tickedQuestions[0].add(index);
+            sendMessage("clickQuestion", { index, option: CheckOption.TICKED, type });
+        }
+    
+    } else {
+    
+        // cross -> tick
+        if (crossedQuestions[1].has(index)) {
+            crossedQuestions[1].delete(index);
+            sendMessage("clickQuestion", { index, option: CheckOption.TICKED, type });
+
+        // tick -> cross
+        } else {
+            crossedQuestions[1].add(index);
+            sendMessage("clickQuestion", { index, option: CheckOption.CROSSED, type });
+        }
+    }
+
 });
 
 // entry point
@@ -709,7 +750,11 @@ wss.on("connection", ws => {
             sockets.set(id, ws);
         }
         
-        callbacks.get(msg.header)(msg.body);
+        if (callbacks.has(msg.header)) {
+            callbacks.get(msg.header)(msg.body);
+        } else {
+            console.error(`header ${msg.header} does not exist`);
+        }
 
         // no need anymore, data is sent in the callback
         // players variable not accurate if do this above, but id needs to be set first
