@@ -136,7 +136,7 @@ async function pullQuestions(type) {
         });
         
         // add all questions to pool whenever syncing with google docs
-        questionPool[type] = new Set(questionRepo[type].map(entry => entry.question));
+        questionPool[type] = new Set(Array.from({ length: questionRepo[type].length }, (_, index) => index));
 
         // all tags default to ticked
         if (type == 0) {
@@ -154,6 +154,8 @@ function buildPool(type) {
         return;
     }
 
+    questionPool[type] = new Set();
+
     if (type == 0) {
 
         // set union
@@ -166,15 +168,15 @@ function buildPool(type) {
             questionPool[0] = questionPool[0].difference(tagRepo[tagIndex].questionIndices);
         });
 
-        questionPool[0].union(tickedQuestions[0]);
+        questionPool[0] = questionPool[0].union(tickedQuestions[0]);
         
     // for type 2, everything not crossed is ticked
     } else {
-        questionPool[1] = new Set(Array.from({ length: questionRepo[1] }));     
+        questionPool[1] = new Set(Array.from({ length: questionRepo[1].length }, (_, index) => index));     
     }
 
     // no difference in order because ticked and crossed questions are mutually exclusive
-    questionPool[type].difference(crossedQuestions[type]);
+    questionPool[type] = questionPool[type].difference(crossedQuestions[type]);
 }
 
 pullQuestions(0);
@@ -263,10 +265,6 @@ let selectedOptions = []; // array of map of (id : array of index (0 == -2, 1 ==
 function sendMessage(header, body, id) {
     console.log(`sent: ${header}`);
 
-    if (header == "bank") {
-        console.log(body);
-    }
-
     // send to all players
     if (id === undefined) {
         players.forEach((value, key) => {
@@ -290,7 +288,7 @@ function countDown() {
         // leader initiated a restart from answering page
         if (shldRestart && phase == 1) {
             phase = 0;
-            sendMessage("transit", { to: phase });
+            sendData();
             shldRestart = false;
             return;
         }
@@ -484,14 +482,13 @@ callbacks.set("transit", ({ to }) => {
             }
 
             // prepare randomly selected questions
-            console.log(type, questionPool[type]);
-            questions = Array.from(questionPool[type]).sort((a, b) => { 
+            questions = [...questionPool[type]].sort((a, b) => { 
                 return Math.random() - 0.5;
             }).slice(0, config[Config.QUESTIONS] + 1).map(questionIndex => {
                 return questionRepo[type][questionIndex].content;
             });
 
-            fs.writeFileSync("log.txt", Array.from(questionPool[type]).map(index => questionRepo[type][index].content).join("\n"), "utf-8");
+            fs.writeFileSync("log.txt", [...questionPool[type]].map(index => questionRepo[type][index].content).join("\n"), "utf-8");
 
             // any letter (server decides)
             if (config[Config.LETTER] == 0) {
