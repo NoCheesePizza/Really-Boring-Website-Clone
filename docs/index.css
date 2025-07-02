@@ -712,7 +712,7 @@ body {
     border-width: 0.1vw 0vw 0vw 0.1vw;
     border-style: solid;
     border-color: var(--grey);
-    width: 5vw;
+    width: 7vw;
     white-space: nowrap;        
     overflow: hidden;           
     text-overflow: ellipsis;
@@ -726,7 +726,7 @@ body {
 
 .tab.selected {
     background-color: var(--bgGrey);
-    width: 12vw;
+    width: 14vw;
     border-width: 0.1vw 0vw 0vw 0.1vw;
     height: 6.3vh;
     transform: translateY(0.2vh);
@@ -737,18 +737,71 @@ body {
     border: 0.1vw solid var(--grey);
     height: 80vh;
     overflow: hidden;
-    /* padding: 2.5vw; */
     position: relative;
 }
 
 .scrollRegion {
-    /* padding-right: -2vw; */
     position: absolute;
     overflow-y: auto;
     height: 90%;
     width: 95%;
     left: 2.5%;
     top: 5%;
+}
+
+.searchBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 2vw;
+    padding-left: 0.5vw;
+    padding-right: 2vw;
+    padding-bottom: 2vw;
+    height: 3vw;
+    position: sticky;
+    top: 0vw;
+    background-color: var(--bgGrey);
+    z-index: 10;
+}
+
+.filter {
+    flex: 1 1 0;
+    border: 0.1vw solid var(--lgrey);
+    border-radius: 4vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 2vw;
+    padding-right: 2vw;
+    color: var(--lgrey);
+    min-width: 0;
+    gap: 1vw;
+    cursor: pointer;
+}
+
+.filterContent {
+    white-space: nowrap;        
+    overflow: hidden;           
+    text-overflow: ellipsis; 
+}
+
+.dropdown {
+    font-size: 3vw;
+    color: rgba(var(--theme), 0.5)
+}
+
+.search {
+    flex: 3 1 0;
+    border: 0.1vw solid var(--lgrey);
+    border-radius: 4vw;
+    min-width: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 2vw;
+    padding-right: 2vw;
+    color: var(--lgrey);
+    cursor: text;
 }
 
 .bankRow {

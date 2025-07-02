@@ -17,8 +17,8 @@
     <div id="bank" style="display: none">
       <div class="tabs">
         <div class="tab" onclick="clickTagsTab()" id="tagsTab">Tags</div>
-        <div class="tab" onclick="clickQuestionsTab(0)">Questions 1</div>
-        <div class="tab" onclick="clickQuestionsTab(1)">Questions 2</div>
+        <div class="tab" onclick="clickQuestionsTab(0)">Type 1 Questions</div>
+        <div class="tab" onclick="clickQuestionsTab(1)">Type 2 Questions</div>
       </div>
       <div class="circleButton" id="download" onclick="pullBank()" title="Pulling not implemented yet">
         <i class="fa-solid fa-cloud-arrow-down"></i>
@@ -30,6 +30,25 @@
         <div class="scrollRegion" id="tags" style="display: none;">
         </div>
         <div class="scrollRegion" id="questions1" style="display: none">
+          <div class="searchBar">
+            <div class="filter">
+              <i class="fa-solid fa-filter"></i></i>
+              <div class="filterContent">Filter</div>
+              <div class="dropdown">▸</div>
+              <div class="menu">
+                <div class="filterOption">
+                  <div class="foInput">
+
+                  </div>
+                  <div class="foContent">Technology</div>
+                </div>
+              </div>
+            </div>
+            <div class="search">
+              <div class="searchContent">Search</div>
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+          </div>
         </div>
         <div class="scrollRegion" id="questions2" style="display: none;">
         </div>

@@ -681,30 +681,37 @@ callbacks.set("transit", ({ to, leaderId }) => {
     document.getElementById("loading").style.display = "none";
 
     switch (to) {
-        // home page
+
+        // home page (if not viewing question bank)
         case 0:
-            answeringDiv.style.display = "none";
-            votingDiv.style.display = "none";
-            homeDiv.style.display = "block";
+            if (currTab == Tab.NONE) {
+                answeringDiv.style.display = "none";
+                votingDiv.style.display = "none";
+                homeDiv.style.display = "block";
+            }
+
             localStorage.removeItem("rbw_inputs");
-            // sendMessage("players config", { id });
             break;
 
         // answering page
         case 1:
+            currTab = Tab.NONE;
+            document.getElementById("bank").style.display = "none";
+
             homeDiv.style.display = "none";
             votingDiv.style.display = "none";
             answeringDiv.style.display = "block";
-            // sendMessage("questions", { id });
             break;
 
         // voting page
         case 2:
+            currTab = Tab.NONE;
+            document.getElementById("bank").style.display = "none";
+
             homeDiv.style.display = "none";
             answeringDiv.style.display = "none";
             votingDiv.style.display = "block";
             localStorage.removeItem("rbw_inputs");
-            // sendMessage("answers selected votes", { id });
             break;
     }
 });
@@ -1078,7 +1085,7 @@ function buildQuestionDivs(type) {
     }
 
     const parentDiv = document.getElementById(type == 0 ? "questions1" : "questions2");
-    parentDiv.innerHTML = "";
+    // parentDiv.innerHTML = "";
     questionDivs[type] = []; // bank rows
 
     questionRepo[type].forEach((question, index) => {
@@ -1411,7 +1418,6 @@ function clickQuestionsTab(type) {
 
 function goBack() {
     currTab = Tab.NONE;
-
     document.getElementById("bank").style.display = "none";
     document.getElementById("home").style.display = "block";
 }
