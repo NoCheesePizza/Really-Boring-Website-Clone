@@ -566,7 +566,7 @@ socket.addEventListener("message", message => {
 // show loading page after 1 s if not connected
 setTimeout(() => {
     if (!isConnected) {
-        // document.getElementById("loading").style.display = "flex";
+        document.getElementById("loading").style.display = "flex";
     }
 }, 1000);
 
