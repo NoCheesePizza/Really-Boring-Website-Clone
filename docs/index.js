@@ -374,15 +374,37 @@ function addEventListenersVoting() {
 
 // fixed number of elements
 const configArrows = document.querySelectorAll(".sValue");
-const configMenus = document.querySelectorAll(".menu");
+const configMenus = [...document.querySelectorAll(".menu")].slice(1); // drop filter menu which also has the menu class
 const configValues = Array(5).fill(0);
 const menuIsClicked = Array(5).fill(false);
 const configOptions = []; // list of lists of dom elements
 
-function closeMenu(index) {
-    configMenus[index].style.height = "0vw";
-    configMenus[index].style.maxHeight = "0vw";
-    configMenus[index].style.overflow = "hidden";
+function closeMenu(element) {
+    element.style.height = "0vw";
+    element.style.maxHeight = "0vw";
+    element.style.overflow = "hidden";
+}
+
+function openMenu(element, height = null) {
+
+    // Temporarily set height to 'auto' to measure full height
+    element.style.display = "block"; // if it's hidden initially
+    element.style.height = "auto";
+    // element.style.paddingTop = "1vh";
+    // element.style.paddingBottom = "0vw";
+
+    const fullHeight = element.scrollHeight + "px";
+
+    // Set back to 0, then animate to fullHeight
+    element.style.height = "0px";
+    element.offsetHeight; // force reflow
+
+    element.style.height = fullHeight;
+    element.style.maxHeight = height == null ? fullHeight : height;
+
+    setTimeout(() => {
+        element.style.overflow = "auto";
+    }, 500);
 }
 
 // thanks jippity
@@ -428,7 +450,7 @@ configOptions.forEach((config, row) => {
     config.forEach((element, column) => {
         element.addEventListener("click", () => {
             // configArrows[index].childNodes[0].textContent = element.textContent + " ";
-            closeMenu(row);
+            closeMenu(configMenus[row]);
             sendMessage("config", { row, column });
         });
     });
@@ -438,35 +460,18 @@ configOptions.forEach((config, row) => {
 configArrows.forEach((element, index) => {
     element.addEventListener("click", () => {
         if (menuIsClicked[index]) {
-            closeMenu(index);
+            closeMenu(configMenus[index]);
             element.classList.remove("open");
 
         } else {
+
             // close every menu when opening a new menu
             for (let i = 0; i < configMenus.length; ++i) {
-                closeMenu(i);
+                closeMenu(configMenus[i]);
                 menuIsClicked[i] = false;
             }
 
-            // Temporarily set height to 'auto' to measure full height
-            configMenus[index].style.display = "block"; // if it's hidden initially
-            configMenus[index].style.height = "auto";
-            // configMenus[index].style.paddingTop = "1vh";
-            // configMenus[index].style.paddingBottom = "0vw";
-
-            const fullHeight = configMenus[index].scrollHeight + "px";
-
-            // Set back to 0, then animate to fullHeight
-            configMenus[index].style.height = "0px";
-            configMenus[index].offsetHeight; // force reflow
-
-            configMenus[index].style.height = fullHeight;
-            configMenus[index].style.maxHeight = isPhone ? "32.5vw" : "13.3vw";
-
-            setTimeout(() => {
-                configMenus[index].style.overflow = "auto";
-            }, 500);
-
+            openMenu(configMenus[index], isPhone ? "32.5vw" : "13.3vw");
             element.classList.add("open");
         }
 
@@ -523,7 +528,7 @@ function sendMessage(header, body) {
 }
 
 // public endpoint: "wss://my-boring-website.onrender.com", private endpoint: "ws://localhost:8080"
-const socket = new WebSocket("wss://my-boring-website.onrender.com");
+const socket = new WebSocket("ws://localhost:8080");
 const myId = localStorage.getItem("rbw_id") ?? genRandomString(32);
 const callbacks = new Map();
 
@@ -1026,12 +1031,28 @@ callbacks.set("next", ({}) => {
     </div>
 */
 
+/*
+    <div class="filterOption">
+        <div class="checkBox" style="border-color: whitesmoke; opacity: 0.8;">
+            <i class="fa-solid fa-circle checkMark"></i>
+        </div>
+        <div>Technology</div>
+    </div>
+*/
+
 function buildTagDivs() {
     const parentDiv = document.getElementById("tags");
+    const filterDiv = document.getElementById("filterMenu");
+
     parentDiv.innerHTML = "";
+    filterDiv.innerHTML = "";
     tagDivs = []; // bank rows
+    filterOptions = new Set();
 
     tagRepo.forEach((tag, index) => {
+
+        // tags
+
         const tagDiv = document.createElement("div");
         tagDiv.classList.add("bankRow");
 
@@ -1063,7 +1084,46 @@ function buildTagDivs() {
 
         tagDivs.push(tagDiv);
         parentDiv.appendChild(tagDiv);
-    });
+
+        // filters
+
+        const optionDiv = document.createElement("div");
+        optionDiv.classList.add("filterOption");
+
+        const filterCheckBoxDiv = document.createElement("div");
+        filterCheckBoxDiv.classList.add("checkBox");
+        filterCheckBoxDiv.style.borderColor = "whitesmoke";
+        filterCheckBoxDiv.style.opacity = "0.8";
+
+        const filterCheckBoxI = document.createElement("i");
+
+        const contentDiv = document.createElement("div");
+        contentDiv.classList.add("filterContent");
+        contentDiv.textContent = `${index == 0 ? "" : "#"}${tag.content}`;
+        contentDiv.style.color = tag.color;
+
+        filterCheckBoxDiv.appendChild(filterCheckBoxI);
+
+        optionDiv.appendChild(filterCheckBoxDiv);
+        optionDiv.appendChild(contentDiv);
+
+        filterDiv.appendChild(optionDiv);
+
+        // function over arrow syntax to get this to be optionDiv
+        optionDiv.addEventListener("click", function (_) {
+            const checkBoxDiv = this.querySelector("i");
+            console.log(checkBoxDiv);
+            
+            if (checkBoxDiv.classList.contains("checkMark")) {
+                checkBoxDiv.className = "";
+                filterOptions.delete(index);
+            } else {
+                checkBoxDiv.className = optionIcons[CheckOption.CHECKED];
+                filterOptions.add(index);
+            }
+            console.log(filterOptions);
+        });
+    });    
 }
 
 /* whole bankRow is a questionDiv
@@ -1085,7 +1145,7 @@ function buildQuestionDivs(type) {
     }
 
     const parentDiv = document.getElementById(type == 0 ? "questions1" : "questions2");
-    // parentDiv.innerHTML = "";
+    // parentDiv.innerHTML = ""; //todo uncomment!
     questionDivs[type] = []; // bank rows
 
     questionRepo[type].forEach((question, index) => {
@@ -1231,14 +1291,58 @@ let tickedTags = new Set(); // set of tagIndex (number)
 let crossedTags = new Set(); // set of tagIndex (number)
 
 // ui
-const CheckOption = Object.freeze({ UNCHECKED: 0, TICKED: 1, CROSSED: 2 }); // "Option" was taken already :(
+const CheckOption = Object.freeze({ UNCHECKED: 0, TICKED: 1, CROSSED: 2, CHECKED: 3 }); // "Option" was taken already :( (checked is for filter)
 const Tab = Object.freeze({ TAGS: 0, QUESTIONS1: 1, QUESTIONS2: 2, NONE: 3 }); // none means not in bank
-const optionIcons = ["fa-solid fa-circle checkMark", "fas fa-check checkMark", "fa-solid fa-xmark checkMark"];
+const optionIcons = ["fa-solid fa-question checkMark", "fas fa-check checkMark", "fa-solid fa-xmark checkMark", "fa-solid fa-circle checkMark"];
 let currTab = Tab.NONE;
 
 // ui
 let tagDivs = []; // array of tags (element)
 let questionDivs = [[], []]; // array of questions (element) for both types
+
+function removeNewLines(str) {
+    return str.replace(/[\r\n]+/g, "");
+}
+
+const searchDiv = document.getElementById("searchContent");
+searchDiv.addEventListener("input", _ => {
+
+    // remove new lines (could've been copied)
+    searchDiv.textContent = removeNewLines(searchDiv.textContent);
+
+    // add "search" text if empty
+    if (searchDiv.textContent == "") {
+        searchDiv.classList.add("empty");
+    } else {
+        searchDiv.classList.remove("empty");
+    }
+});
+
+let isFilterOpen = false;
+let filterOptions = new Set(); // tagIndices that were filtered for
+const filterDiv = document.getElementById("filter");
+const menuDiv = document.getElementById("filterMenu");
+const dropDownDiv = document.getElementById("dropdown");
+
+filterDiv.addEventListener("click", event => {
+    if (menuDiv.contains(event.target)) {
+        return;
+    }
+
+    event.stopPropagation();
+    isFilterOpen = !isFilterOpen;
+
+    // close -> open
+    if (isFilterOpen) {
+        openMenu(menuDiv);
+        dropDownDiv.classList.add("open");
+    
+    // open -> close
+    } else {
+        closeMenu(menuDiv);
+        dropDownDiv.classList.remove("open");
+    }
+});
 
 // tab switching animation
 const tabs = document.querySelectorAll(".tab");

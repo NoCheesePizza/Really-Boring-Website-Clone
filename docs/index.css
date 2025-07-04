@@ -428,10 +428,10 @@ body {
 }
 
 .pName {
-  white-space: nowrap;        
-  overflow: hidden;           
-  text-overflow: ellipsis;    
-  max-width: 20vw;             
+    white-space: nowrap;        
+    overflow: hidden;           
+    text-overflow: ellipsis;    
+    max-width: 20vw;             
 }
 
 .leader.you::after {
@@ -764,7 +764,7 @@ body {
     z-index: 10;
 }
 
-.filter {
+#filter {
     flex: 1 1 0;
     border: 0.1vw solid var(--lgrey);
     border-radius: 4vw;
@@ -777,18 +777,50 @@ body {
     min-width: 0;
     gap: 1vw;
     cursor: pointer;
+    position: relative;
 }
 
-.filterContent {
+.filterTitle {
     white-space: nowrap;        
     overflow: hidden;           
     text-overflow: ellipsis; 
 }
 
-.dropdown {
+#dropdown {
     font-size: 3vw;
-    color: rgba(var(--theme), 0.5)
+    color: rgba(var(--theme), 0.5);
+    transform: scaleX(1.2);
+    transition: transform 0.5s ease;
 }
+
+#dropdown.open {
+    transform: rotate(90deg) scaleX(1.2);
+}
+
+.filterOption {
+    width: 75%;
+    align-content: center;
+    text-align: center;
+    align-self: center;
+    transform: translateX(15%);
+    border-radius: 1.5vw;
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.5vw;
+    margin-bottom: 0.5vw;
+    color: whitesmoke;   
+}
+
+.filterContent {
+    white-space: nowrap;        
+    overflow: hidden;           
+    text-overflow: ellipsis;
+    width: 70%;
+    text-align: left;
+} 
 
 .search {
     flex: 3 1 0;
@@ -800,8 +832,31 @@ body {
     align-items: center;
     padding-left: 2vw;
     padding-right: 2vw;
+    position: relative;
+}
+
+#searchContent.empty::before {
+    content: "Search";
     color: var(--lgrey);
-    cursor: text;
+}
+
+#searchContent {
+    width: 95%;
+    color: whitesmoke;
+    text-overflow: clip;
+    white-space: nowrap;
+    overflow: hidden;
+    caret-color: rgba(var(--theme), 0.75);
+}
+
+#searchContent:focus {
+    outline: none;
+}
+
+.fa-magnifying-glass {
+    color: var(--lgrey);
+    position: absolute;
+    left: 95%;
 }
 
 .bankRow {
