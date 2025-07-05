@@ -86,9 +86,9 @@ async function pullQuestions(type) {
             const line = dom(element).text().trim();
             if (type == 0) {
 
-                // Find all that satisfy the format #<any number of at least 1 characters that are not newline, return or hash>
-                const question = line.split("#")[0].trim(); // Get text before first hash
-                const tags = [...line.matchAll(/#([^#\n\r]+)/g)].map(m => m[1].trim());
+                // Find all that satisfy the format ^<any number of at least 1 characters that are not newline, return or ^>
+                const question = line.split("^")[0].trim(); // Get text before first ^
+                const tags = [...line.matchAll(/\^([^\^\n\r]+)/g)].map(m => m[1].trim());
                 // questionRepo[0].push({ question, tags, option: Option.UNCHECKED, isInPool: true });
 
                 const tagIndices = [];
@@ -142,7 +142,14 @@ async function pullQuestions(type) {
         if (type == 0) {
             tickedTags = new Set(Array.from({ length: tagRepo.length }, (_, index) => index));
             crossedTags = new Set();
+
+            // sort tags so they always appear in the same order in the frontend
+            questionRepo[0].forEach(question => {
+                question.tagIndices = question.tagIndices.sort((a, b) => a - b);
+            });
         }
+
+        console.log(`done with ${type}`);
         
     } catch (error) {
         console.log(`Error pulling type ${type} questions: ${error}`);
@@ -351,6 +358,17 @@ function sendData(id) {
     }
 }
 
+function sendBank() {
+    sendMessage("bank", { 
+        _tagRepo: JSON.stringify(tagRepo.map(tag => ({ content: tag.content, color: tag.color, questionIndices: Array.from(tag.questionIndices) }))), 
+        _questionRepo: questionRepo, 
+        _tickedQuestions: JSON.stringify(tickedQuestions.map(set => Array.from(set))), 
+        _crossedQuestions: JSON.stringify(crossedQuestions.map(set => Array.from(set))),
+        _tickedTags: JSON.stringify(Array.from(tickedTags)),
+        _crossedTags: JSON.stringify(Array.from(crossedTags))
+    });
+}
+
 function goNext() {
 
     // award actual points
@@ -406,17 +424,8 @@ callbacks.set("enter", ({ id, username, score, deltaScore, theme }) => {
     // force everyone to redraw ui (leader might've been changed)
     sendData();
 
-    console.log({ tickedTags, crossedTags });
-
     // send bank data to the new player
-    sendMessage("bank", { 
-        _tagRepo: JSON.stringify(tagRepo.map(tag => ({ content: tag.content, color: tag.color, questionIndices: Array.from(tag.questionIndices) }))), 
-        _questionRepo: questionRepo, 
-        _tickedQuestions: JSON.stringify(tickedQuestions.map(set => Array.from(set))), 
-        _crossedQuestions: JSON.stringify(crossedQuestions.map(set => Array.from(set))),
-        _tickedTags: JSON.stringify(Array.from(tickedTags)),
-        _crossedTags: JSON.stringify(Array.from(crossedTags))
-    });
+    sendBank();
 });
 
 // player changed username
@@ -730,6 +739,12 @@ callbacks.set("clickQuestion", ({ index, type }) => {
         }
     }
 
+});
+
+callbacks.set("pull", ({}) => {
+    Promise.all([pullQuestions(0), pullQuestions(1)]).then(() => {
+        sendBank();
+    });
 });
 
 // entry point

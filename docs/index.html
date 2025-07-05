@@ -17,21 +17,49 @@
     <div id="bank" style="display: none">
       <div class="tabs">
         <div class="tab" onclick="clickTagsTab()" id="tagsTab">Tags</div>
-        <div class="tab" onclick="clickQuestionsTab(0)">Questions 1</div>
-        <div class="tab" onclick="clickQuestionsTab(1)">Questions 2</div>
+        <div class="tab" onclick="clickQuestionsTab(0)">Type 1 Questions</div>
+        <div class="tab" onclick="clickQuestionsTab(1)">Type 2 Questions</div>
       </div>
-      <div class="circleButton" id="download" onclick="pullBank()" title="Pulling not implemented yet">
+      <div class="circleButton" id="download" onclick="pullBank()">
         <i class="fa-solid fa-cloud-arrow-down"></i>
       </div>
       <div class="circleButton" id="goBack" onclick="goBack()">
         <i class="fa-solid fa-arrow-left"></i>
       </div>
       <div class="tabContainer">
-        <div class="scrollRegion" id="tags" style="display: none;">
+        <div class="scrollRegion" id="tagsRegion" style="display: none;">
+          <div class="searchBar">
+            <div class="search">
+              <div class="searchContent empty" contenteditable="true"></div>
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+          </div>
+          <div id="tags"></div>
         </div>
-        <div class="scrollRegion" id="questions1" style="display: none">
+        <div class="scrollRegion" id="questions1Region" style="display: none">
+          <div class="searchBar">
+            <div id="filter">
+              <i class="fa-solid fa-filter"></i></i>
+              <div class="filterTitle">Filter</div>
+              <div id="dropdown">▸</div>
+              <div class="menu" id="filterMenu" style="width: 101%">
+              </div>
+            </div>
+            <div class="search">
+              <div id="questions1Search" class="searchContent empty" contenteditable="true"></div>
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+          </div>
+          <div id="questions1"></div>
         </div>
-        <div class="scrollRegion" id="questions2" style="display: none;">
+        <div class="scrollRegion" id="questions2Region" style="display: none;">
+          <div class="searchBar">
+            <div class="search">
+              <div class="searchContent empty" contenteditable="true"></div>
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+          </div>
+          <div id="questions2"></div>
         </div>
       </div>
     </div>
@@ -67,8 +95,7 @@
       </div>
       <div class="line"></div>
       </div>
-      <div class="bottomColumn" id="answers">
-    </div>
+      <div class="bottomColumn" id="answers"></div>
   </div>
   <div id="home" style="display: none">
     <div class="division">

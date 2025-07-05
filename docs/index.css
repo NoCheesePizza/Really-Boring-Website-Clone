@@ -428,10 +428,10 @@ body {
 }
 
 .pName {
-  white-space: nowrap;        
-  overflow: hidden;           
-  text-overflow: ellipsis;    
-  max-width: 20vw;             
+    white-space: nowrap;        
+    overflow: hidden;           
+    text-overflow: ellipsis;    
+    max-width: 20vw;             
 }
 
 .leader.you::after {
@@ -571,10 +571,10 @@ body {
 .menu {
     position: absolute;
     background-color: var(--lgrey);
-    opacity: 0.85;
+    opacity: 0.9;
     border-radius: 1.5vw;
     left: 50%;
-    width: 103%;
+    width: 103%; /* was 103% */
     text-align: center;
     transform: translateX(-50%);
     top: 120%;
@@ -704,6 +704,7 @@ body {
     justify-content: flex-start;
     align-items: center;
     height: 6.5vh;
+    /* font-size: 3vh; */
 }
 
 .tab {
@@ -712,7 +713,7 @@ body {
     border-width: 0.1vw 0vw 0vw 0.1vw;
     border-style: solid;
     border-color: var(--grey);
-    width: 5vw;
+    width: 7vw;
     white-space: nowrap;        
     overflow: hidden;           
     text-overflow: ellipsis;
@@ -726,7 +727,7 @@ body {
 
 .tab.selected {
     background-color: var(--bgGrey);
-    width: 12vw;
+    width: 14vw;
     border-width: 0.1vw 0vw 0vw 0.1vw;
     height: 6.3vh;
     transform: translateY(0.2vh);
@@ -737,18 +738,126 @@ body {
     border: 0.1vw solid var(--grey);
     height: 80vh;
     overflow: hidden;
-    /* padding: 2.5vw; */
     position: relative;
 }
 
 .scrollRegion {
-    /* padding-right: -2vw; */
     position: absolute;
     overflow-y: auto;
     height: 90%;
     width: 95%;
     left: 2.5%;
     top: 5%;
+}
+
+.searchBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 2vw;
+    padding-left: 0.5vw;
+    padding-right: 2vw;
+    padding-bottom: 2vw;
+    height: 3vw;
+    position: sticky;
+    top: 0vw;
+    background-color: var(--bgGrey);
+    z-index: 10;
+}
+
+#filter {
+    flex: 1 1 0;
+    border: 0.1vw solid var(--lgrey);
+    border-radius: 4vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 2vw;
+    padding-right: 2vw;
+    color: var(--lgrey);
+    min-width: 0;
+    gap: 1vw;
+    cursor: pointer;
+    position: relative;
+}
+
+.filterTitle {
+    white-space: nowrap;        
+    overflow: hidden;           
+    text-overflow: ellipsis; 
+}
+
+#dropdown {
+    font-size: 3vw;
+    color: rgba(var(--theme), 0.5);
+    transform: scaleX(1.2);
+    transition: transform 0.5s ease;
+}
+
+#dropdown.open {
+    transform: rotate(90deg) scaleX(1.2);
+}
+
+.filterOption {
+    width: 75%;
+    align-content: center;
+    text-align: center;
+    align-self: center;
+    transform: translateX(15%);
+    border-radius: 1.5vw;
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.5vw;
+    margin-bottom: 0.5vw;
+    color: whitesmoke;   
+}
+
+.filterContent {
+    white-space: nowrap;        
+    overflow: hidden;           
+    text-overflow: ellipsis;
+    width: 70%;
+    text-align: left;
+} 
+
+.search {
+    flex: 3 1 0;
+    border: 0.1vw solid var(--lgrey);
+    border-radius: 4vw;
+    min-width: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 2vw;
+    padding-right: 2vw;
+    position: relative;
+}
+
+.searchContent.empty::before {
+    content: "Search";
+    color: var(--lgrey);
+}
+
+.searchContent {
+    width: 95%;
+    color: whitesmoke;
+    text-overflow: clip;
+    white-space: nowrap;
+    overflow: hidden;
+    caret-color: rgba(var(--theme), 0.75);
+}
+
+.searchContent:focus {
+    outline: none;
+}
+
+.fa-magnifying-glass {
+    color: var(--lgrey);
+    position: absolute;
+    left: 95%;
 }
 
 .bankRow {
@@ -791,7 +900,6 @@ body {
 
 .bankCount {
     padding-left: 1vw;
-    /* opacity: ; */
 }
 
 /* Responsive override for phones */
@@ -802,6 +910,11 @@ body {
         --lSize: 12vw;
         --botPadding: 4px;
         --emojiPadding: 1.8vw;
+    }
+
+    ::-webkit-scrollbar {
+        width: 3vw;
+        border-radius: 6vw;
     }
 
     /** answering **/
@@ -992,5 +1105,124 @@ body {
 
     .buttonColumn {
         gap: 1.5vw;
+    }
+
+    /** bank **/
+
+    .circleButton {
+        width: 7vw;
+        height: 7vw;
+        font-size: 3vw;
+    }
+
+    #download {
+        right: 15vw;
+    }
+
+    #goBack {
+        right: 5vw;
+    }
+
+    .tabs {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        height: 6.5vh;
+    }
+
+    .tab {
+        border-width: 0.3vw 0vw 0vw 0.3vw;
+        width: 14vw;
+        padding-left: 2vw;
+        padding-right: 1vw;
+    }
+
+    .tab.selected {
+        width: 28vw;
+        border-width: 0.3vw 0vw 0vw 0.3vw;
+    }
+
+    @media (max-width: 420px) {
+        .tab.selected {
+            white-space: normal;
+            overflow-wrap: break-word;
+        }
+    }
+
+    .scrollRegion {
+        width: 90%;
+        left: 5%;
+        top: 5%;
+    }
+
+    .searchBar {
+        gap: 3vw;
+        padding-right: 4vw;
+        padding-bottom: 4vw;
+        height: auto;
+        top: -0.2vw;
+        flex-direction: column;
+    }
+
+    #filter {
+        padding-left: 4vw;
+        padding-right: 4vw;
+    }
+
+    #dropdown {
+        transform: scale(2.4, 2);
+    }
+
+    #dropdown.open {
+        transform: rotate(90deg) scale(2.4, 2);
+    }
+
+    .filterOption {
+        width: 90%;
+        transform: translateX(10%);
+        padding-top: 1vw;
+        padding-bottom: 1vw;
+    }
+
+    .filterContent {
+        width: 88%;
+    } 
+
+    .fa-filter {
+        transform: scale(0.8);
+    }
+
+    .search {
+        padding-left: 4vw;
+        padding-right: 5vw;
+    }
+
+    .searchContent {
+        width: 92%;
+    }
+    
+    .fa-magnifying-glass {
+        transform: scale(0.8);
+        left: 90%;
+    }
+
+    .bankRow {
+        padding: 1vw;
+        padding-right: 5vw;
+    }
+
+    .checkBox {
+        height: 6vw;
+        width: 6vw;
+        aspect-ratio: 1 / 1;
+        margin-right: 6vw; 
+    }
+
+    .bankNum {
+        width: 26vw;
+    }
+
+    .bankCount {
+        padding-left: 2vw;
     }
 }

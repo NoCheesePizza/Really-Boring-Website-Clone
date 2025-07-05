@@ -374,15 +374,37 @@ function addEventListenersVoting() {
 
 // fixed number of elements
 const configArrows = document.querySelectorAll(".sValue");
-const configMenus = document.querySelectorAll(".menu");
+const configMenus = [...document.querySelectorAll(".menu")].slice(1); // drop filter menu which also has the menu class
 const configValues = Array(5).fill(0);
 const menuIsClicked = Array(5).fill(false);
 const configOptions = []; // list of lists of dom elements
 
-function closeMenu(index) {
-    configMenus[index].style.height = "0vw";
-    configMenus[index].style.maxHeight = "0vw";
-    configMenus[index].style.overflow = "hidden";
+function closeMenu(element) {
+    element.style.height = "0vw";
+    element.style.maxHeight = "0vw";
+    element.style.overflow = "hidden";
+}
+
+function openMenu(element, maxHeight = null) {
+
+    // Temporarily set height to 'auto' to measure full height
+    element.style.display = "block"; // if it's hidden initially
+    element.style.height = "auto";
+    // element.style.paddingTop = "1vh";
+    // element.style.paddingBottom = "0vw";
+
+    const fullHeight = element.scrollHeight + "px";
+
+    // Set back to 0, then animate to fullHeight
+    element.style.height = "0px";
+    element.offsetHeight; // force reflow
+
+    element.style.height = fullHeight;
+    element.style.maxHeight = maxHeight == null ? fullHeight : maxHeight;
+
+    setTimeout(() => {
+        element.style.overflow = "auto";
+    }, 500);
 }
 
 // thanks jippity
@@ -428,7 +450,7 @@ configOptions.forEach((config, row) => {
     config.forEach((element, column) => {
         element.addEventListener("click", () => {
             // configArrows[index].childNodes[0].textContent = element.textContent + " ";
-            closeMenu(row);
+            closeMenu(configMenus[row]);
             sendMessage("config", { row, column });
         });
     });
@@ -438,35 +460,18 @@ configOptions.forEach((config, row) => {
 configArrows.forEach((element, index) => {
     element.addEventListener("click", () => {
         if (menuIsClicked[index]) {
-            closeMenu(index);
+            closeMenu(configMenus[index]);
             element.classList.remove("open");
 
         } else {
+
             // close every menu when opening a new menu
             for (let i = 0; i < configMenus.length; ++i) {
-                closeMenu(i);
+                closeMenu(configMenus[i]);
                 menuIsClicked[i] = false;
             }
 
-            // Temporarily set height to 'auto' to measure full height
-            configMenus[index].style.display = "block"; // if it's hidden initially
-            configMenus[index].style.height = "auto";
-            // configMenus[index].style.paddingTop = "1vh";
-            // configMenus[index].style.paddingBottom = "0vw";
-
-            const fullHeight = configMenus[index].scrollHeight + "px";
-
-            // Set back to 0, then animate to fullHeight
-            configMenus[index].style.height = "0px";
-            configMenus[index].offsetHeight; // force reflow
-
-            configMenus[index].style.height = fullHeight;
-            configMenus[index].style.maxHeight = isPhone ? "32.5vw" : "13.3vw";
-
-            setTimeout(() => {
-                configMenus[index].style.overflow = "auto";
-            }, 500);
-
+            openMenu(configMenus[index], isPhone ? "32.5vw" : "13.3vw");
             element.classList.add("open");
         }
 
@@ -566,6 +571,7 @@ socket.addEventListener("message", message => {
 // show loading page after 1 s if not connected
 setTimeout(() => {
     if (!isConnected) {
+        document.getElementById("loading").style.display = "flex";
         document.getElementById("loading").style.display = "flex";
     }
 }, 1000);
@@ -681,30 +687,37 @@ callbacks.set("transit", ({ to, leaderId }) => {
     document.getElementById("loading").style.display = "none";
 
     switch (to) {
-        // home page
+
+        // home page (if not viewing question bank)
         case 0:
-            answeringDiv.style.display = "none";
-            votingDiv.style.display = "none";
-            homeDiv.style.display = "block";
+            if (currTab == Tab.NONE) {
+                answeringDiv.style.display = "none";
+                votingDiv.style.display = "none";
+                homeDiv.style.display = "block";
+            }
+
             localStorage.removeItem("rbw_inputs");
-            // sendMessage("players config", { id });
             break;
 
         // answering page
         case 1:
+            currTab = Tab.NONE;
+            document.getElementById("bank").style.display = "none";
+
             homeDiv.style.display = "none";
             votingDiv.style.display = "none";
             answeringDiv.style.display = "block";
-            // sendMessage("questions", { id });
             break;
 
         // voting page
         case 2:
+            currTab = Tab.NONE;
+            document.getElementById("bank").style.display = "none";
+
             homeDiv.style.display = "none";
             answeringDiv.style.display = "none";
             votingDiv.style.display = "block";
             localStorage.removeItem("rbw_inputs");
-            // sendMessage("answers selected votes", { id });
             break;
     }
 });
@@ -1019,12 +1032,28 @@ callbacks.set("next", ({}) => {
     </div>
 */
 
+/*
+    <div class="filterOption">
+        <div class="checkBox" style="border-color: whitesmoke; opacity: 0.8;">
+            <i class="fa-solid fa-circle checkMark"></i>
+        </div>
+        <div>Technology</div>
+    </div>
+*/
+
 function buildTagDivs() {
     const parentDiv = document.getElementById("tags");
+    const filterDiv = document.getElementById("filterMenu");
+
     parentDiv.innerHTML = "";
+    filterDiv.innerHTML = "";
     tagDivs = []; // bank rows
+    filterOptions = new Set();
 
     tagRepo.forEach((tag, index) => {
+
+        // tags
+
         const tagDiv = document.createElement("div");
         tagDiv.classList.add("bankRow");
 
@@ -1056,7 +1085,46 @@ function buildTagDivs() {
 
         tagDivs.push(tagDiv);
         parentDiv.appendChild(tagDiv);
-    });
+
+        // filters
+
+        const optionDiv = document.createElement("div");
+        optionDiv.classList.add("filterOption");
+
+        const filterCheckBoxDiv = document.createElement("div");
+        filterCheckBoxDiv.classList.add("checkBox");
+        filterCheckBoxDiv.style.borderColor = "whitesmoke";
+        filterCheckBoxDiv.style.opacity = "0.8";
+
+        const filterCheckBoxI = document.createElement("i");
+
+        const contentDiv = document.createElement("div");
+        contentDiv.classList.add("filterContent");
+        contentDiv.textContent = `${index == 0 ? "" : "#"}${tag.content}`;
+        contentDiv.style.color = tag.color;
+
+        filterCheckBoxDiv.appendChild(filterCheckBoxI);
+
+        optionDiv.appendChild(filterCheckBoxDiv);
+        optionDiv.appendChild(contentDiv);
+
+        filterDiv.appendChild(optionDiv);
+
+        // function over arrow syntax to get this to be optionDiv
+        optionDiv.addEventListener("click", function (_) {
+            const checkBoxDiv = this.querySelector("i");
+            
+            if (checkBoxDiv.classList.contains("checkMark")) {
+                checkBoxDiv.className = "";
+                filterOptions.delete(index);
+            } else {
+                checkBoxDiv.className = optionIcons[CheckOption.CHECKED];
+                filterOptions.add(index);
+            }
+
+            filterQuestions1(document.getElementById("questions1Search").textContent);
+        });
+    });    
 }
 
 /* whole bankRow is a questionDiv
@@ -1152,6 +1220,13 @@ callbacks.set("bank", ({ _tagRepo, _questionRepo, _tickedQuestions, _crossedQues
     buildTagDivs();
     buildQuestionDivs(0);
     buildQuestionDivs(1);
+
+    // reload current tab
+    if (currTab == Tab.TAGS) {
+        clickTagsTab();
+    } else if (currTab != Tab.NONE) {
+        clickQuestionsTab(currTab - 1);
+    }
 });
 
 callbacks.set("clickTag", ({ index, option }) => {
@@ -1224,14 +1299,82 @@ let tickedTags = new Set(); // set of tagIndex (number)
 let crossedTags = new Set(); // set of tagIndex (number)
 
 // ui
-const CheckOption = Object.freeze({ UNCHECKED: 0, TICKED: 1, CROSSED: 2 }); // "Option" was taken already :(
+const CheckOption = Object.freeze({ UNCHECKED: 0, TICKED: 1, CROSSED: 2, CHECKED: 3 }); // "Option" was taken already :( (checked is for filter)
 const Tab = Object.freeze({ TAGS: 0, QUESTIONS1: 1, QUESTIONS2: 2, NONE: 3 }); // none means not in bank
-const optionIcons = ["fa-solid fa-circle checkMark", "fas fa-check checkMark", "fa-solid fa-xmark checkMark"];
+const optionIcons = ["fa-solid fa-question checkMark", "fas fa-check checkMark", "fa-solid fa-xmark checkMark", "fa-solid fa-circle checkMark"];
 let currTab = Tab.NONE;
 
 // ui
 let tagDivs = []; // array of tags (element)
 let questionDivs = [[], []]; // array of questions (element) for both types
+
+function removeNewLines(str) {
+    return str.replace(/[\r\n]+/g, "");
+}
+
+const searchDivs = document.querySelectorAll(".searchContent");
+searchDivs.forEach((searchDiv, i) => {
+    searchDiv.addEventListener("input", _ => {
+
+        // remove new lines (could've been copied)
+        searchDiv.textContent = removeNewLines(searchDiv.textContent);
+        const query = searchDiv.textContent.toLowerCase();
+
+        // add "search" text if empty
+        if (searchDiv.textContent == "") {
+            searchDiv.classList.add("empty");
+        } else {
+            searchDiv.classList.remove("empty");
+        }
+
+        if (i == Tab.QUESTIONS1) {
+            filterQuestions1(query);
+
+        } else {
+            if (searchDiv.textContent == "") {
+
+                // no search query, display all 
+                (i == Tab.TAGS ? tagDivs : questionDivs[i - 1]).forEach(div => {
+                    div.style.display = "flex";
+                });
+
+            } else {
+
+                // filter from search query
+                (i == Tab.TAGS ? tagDivs : questionDivs[i - 1]).forEach((div, j) => {
+                    div.style.display = div.textContent.toLowerCase().match(query) ? "flex" : "none";
+                });
+            }
+        }
+    });
+});
+
+// filter
+let isFilterOpen = false;
+let filterOptions = new Set(); // tagIndices that were filtered for
+const filterDiv = document.getElementById("filter");
+const menuDiv = document.getElementById("filterMenu");
+const dropDownDiv = document.getElementById("dropdown");
+
+filterDiv.addEventListener("click", event => {
+    if (menuDiv.contains(event.target)) {
+        return;
+    }
+
+    event.stopPropagation();
+    isFilterOpen = !isFilterOpen;
+
+    // close -> open
+    if (isFilterOpen) {
+        openMenu(menuDiv, isPhone ? "150vw" : "30vw");
+        dropDownDiv.classList.add("open");
+    
+    // open -> close
+    } else {
+        closeMenu(menuDiv);
+        dropDownDiv.classList.remove("open");
+    }
+});
 
 // tab switching animation
 const tabs = document.querySelectorAll(".tab");
@@ -1243,6 +1386,44 @@ tabs.forEach(tab => {
         tab.classList.add("selected");
     });
 });
+
+function filterQuestions1(query) {
+    let questionIndices = new Set();
+    
+    // hide all divs then show those inside set (only if there are filters)
+    if (filterOptions.size == 0) {
+        questionDivs[0].forEach(div => {
+            div.style.display = "flex";
+        });
+
+        // add all questions to the set
+        questionIndices = new Set(Array.from({ length: questionRepo[0].length }, (_, i) => i));
+        
+    } else {
+        questionDivs[0].forEach(div => {
+            div.style.display = "none";
+        });
+        
+        // get set of all questions that have checked tag (this is union, for intersection use search)
+        filterOptions.forEach(tagIndex => {
+            questionIndices = questionIndices.union(tagRepo[tagIndex].questionIndices);
+        });
+    }
+
+    // take into account search query
+    if (query == "") {
+        if (filterOptions.size != 0) {
+            questionIndices.forEach(questionIndex => {
+                questionDivs[0][questionIndex].style.display = "flex";
+            });
+        }
+
+    } else {
+        questionIndices.forEach(questionIndex => {
+            questionDivs[0][questionIndex].style.display = questionDivs[0][questionIndex].textContent.toLowerCase().match(query) ? "flex" : "none";
+        });
+    }
+}
 
 function clickTag(index) {
     sendMessage("clickTag", { index });
@@ -1355,9 +1536,9 @@ function buildPoolFromTags() {
 function clickTagsTab() {
     currTab = Tab.TAGS;
 
-    document.getElementById("tags").style.display = "block";
-    document.getElementById("questions1").style.display = "none";
-    document.getElementById("questions2").style.display = "none";
+    document.getElementById("tagsRegion").style.display = "block";
+    document.getElementById("questions1Region").style.display = "none";
+    document.getElementById("questions2Region").style.display = "none";
 
     // redraw all tags check boxes and opacity correctly (the div should already exist)
     tagRepo.forEach((tag, index) => {
@@ -1388,9 +1569,9 @@ function clickQuestionsTab(type) {
     }
 
     if (type == 0) {
-        document.getElementById("tags").style.display = "none";
-        document.getElementById("questions1").style.display = "block";
-        document.getElementById("questions2").style.display = "none";
+        document.getElementById("tagsRegion").style.display = "none";
+        document.getElementById("questions1Region").style.display = "block";
+        document.getElementById("questions2Region").style.display = "none";
 
         // set ticks if type 1
         tickedQuestions[0].forEach(questionIndex => {
@@ -1398,9 +1579,9 @@ function clickQuestionsTab(type) {
         });
     
     } else {
-        document.getElementById("tags").style.display = "none";
-        document.getElementById("questions1").style.display = "none";
-        document.getElementById("questions2").style.display = "block";
+        document.getElementById("tagsRegion").style.display = "none";
+        document.getElementById("questions1Region").style.display = "none";
+        document.getElementById("questions2Region").style.display = "block";
     }
 
     // set crosses (type 2 ignores ticked questions)
@@ -1411,10 +1592,10 @@ function clickQuestionsTab(type) {
 
 function goBack() {
     currTab = Tab.NONE;
-
     document.getElementById("bank").style.display = "none";
     document.getElementById("home").style.display = "block";
 }
 
 function pullBank() {
+    sendMessage("pull", {});
 }
