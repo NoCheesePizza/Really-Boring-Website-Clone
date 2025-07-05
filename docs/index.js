@@ -385,7 +385,7 @@ function closeMenu(element) {
     element.style.overflow = "hidden";
 }
 
-function openMenu(element, height = null) {
+function openMenu(element, maxHeight = null) {
 
     // Temporarily set height to 'auto' to measure full height
     element.style.display = "block"; // if it's hidden initially
@@ -400,7 +400,7 @@ function openMenu(element, height = null) {
     element.offsetHeight; // force reflow
 
     element.style.height = fullHeight;
-    element.style.maxHeight = height == null ? fullHeight : height;
+    element.style.maxHeight = maxHeight == null ? fullHeight : maxHeight;
 
     setTimeout(() => {
         element.style.overflow = "auto";
@@ -528,7 +528,7 @@ function sendMessage(header, body) {
 }
 
 // public endpoint: "wss://my-boring-website.onrender.com", private endpoint: "ws://localhost:8080"
-const socket = new WebSocket("ws://localhost:8080");
+const socket = new WebSocket("wss://my-boring-website.onrender.com");
 const myId = localStorage.getItem("rbw_id") ?? genRandomString(32);
 const callbacks = new Map();
 
@@ -571,7 +571,7 @@ socket.addEventListener("message", message => {
 // show loading page after 1 s if not connected
 setTimeout(() => {
     if (!isConnected) {
-        // document.getElementById("loading").style.display = "flex";
+        document.getElementById("loading").style.display = "flex";
     }
 }, 1000);
 
@@ -1112,7 +1112,6 @@ function buildTagDivs() {
         // function over arrow syntax to get this to be optionDiv
         optionDiv.addEventListener("click", function (_) {
             const checkBoxDiv = this.querySelector("i");
-            console.log(checkBoxDiv);
             
             if (checkBoxDiv.classList.contains("checkMark")) {
                 checkBoxDiv.className = "";
@@ -1121,7 +1120,8 @@ function buildTagDivs() {
                 checkBoxDiv.className = optionIcons[CheckOption.CHECKED];
                 filterOptions.add(index);
             }
-            console.log(filterOptions);
+
+            filterQuestions1(document.getElementById("questions1Search").textContent);
         });
     });    
 }
@@ -1145,7 +1145,7 @@ function buildQuestionDivs(type) {
     }
 
     const parentDiv = document.getElementById(type == 0 ? "questions1" : "questions2");
-    // parentDiv.innerHTML = ""; //todo uncomment!
+    parentDiv.innerHTML = "";
     questionDivs[type] = []; // bank rows
 
     questionRepo[type].forEach((question, index) => {
@@ -1219,6 +1219,13 @@ callbacks.set("bank", ({ _tagRepo, _questionRepo, _tickedQuestions, _crossedQues
     buildTagDivs();
     buildQuestionDivs(0);
     buildQuestionDivs(1);
+
+    // reload current tab
+    if (currTab == Tab.TAGS) {
+        clickTagsTab();
+    } else if (currTab != Tab.NONE) {
+        clickQuestionsTab(currTab - 1);
+    }
 });
 
 callbacks.set("clickTag", ({ index, option }) => {
@@ -1304,20 +1311,44 @@ function removeNewLines(str) {
     return str.replace(/[\r\n]+/g, "");
 }
 
-const searchDiv = document.getElementById("searchContent");
-searchDiv.addEventListener("input", _ => {
+const searchDivs = document.querySelectorAll(".searchContent");
+searchDivs.forEach((searchDiv, i) => {
+    searchDiv.addEventListener("input", _ => {
 
-    // remove new lines (could've been copied)
-    searchDiv.textContent = removeNewLines(searchDiv.textContent);
+        // remove new lines (could've been copied)
+        searchDiv.textContent = removeNewLines(searchDiv.textContent);
+        const query = searchDiv.textContent.toLowerCase();
 
-    // add "search" text if empty
-    if (searchDiv.textContent == "") {
-        searchDiv.classList.add("empty");
-    } else {
-        searchDiv.classList.remove("empty");
-    }
+        // add "search" text if empty
+        if (searchDiv.textContent == "") {
+            searchDiv.classList.add("empty");
+        } else {
+            searchDiv.classList.remove("empty");
+        }
+
+        if (i == Tab.QUESTIONS1) {
+            filterQuestions1(query);
+
+        } else {
+            if (searchDiv.textContent == "") {
+
+                // no search query, display all 
+                (i == Tab.TAGS ? tagDivs : questionDivs[i - 1]).forEach(div => {
+                    div.style.display = "flex";
+                });
+
+            } else {
+
+                // filter from search query
+                (i == Tab.TAGS ? tagDivs : questionDivs[i - 1]).forEach((div, j) => {
+                    div.style.display = div.textContent.toLowerCase().match(query) ? "flex" : "none";
+                });
+            }
+        }
+    });
 });
 
+// filter
 let isFilterOpen = false;
 let filterOptions = new Set(); // tagIndices that were filtered for
 const filterDiv = document.getElementById("filter");
@@ -1334,7 +1365,7 @@ filterDiv.addEventListener("click", event => {
 
     // close -> open
     if (isFilterOpen) {
-        openMenu(menuDiv);
+        openMenu(menuDiv, isPhone ? "150vw" : "30vw");
         dropDownDiv.classList.add("open");
     
     // open -> close
@@ -1354,6 +1385,44 @@ tabs.forEach(tab => {
         tab.classList.add("selected");
     });
 });
+
+function filterQuestions1(query) {
+    let questionIndices = new Set();
+    
+    // hide all divs then show those inside set (only if there are filters)
+    if (filterOptions.size == 0) {
+        questionDivs[0].forEach(div => {
+            div.style.display = "flex";
+        });
+
+        // add all questions to the set
+        questionIndices = new Set(Array.from({ length: questionRepo[0].length }, (_, i) => i));
+        
+    } else {
+        questionDivs[0].forEach(div => {
+            div.style.display = "none";
+        });
+        
+        // get set of all questions that have checked tag (this is union, for intersection use search)
+        filterOptions.forEach(tagIndex => {
+            questionIndices = questionIndices.union(tagRepo[tagIndex].questionIndices);
+        });
+    }
+
+    // take into account search query
+    if (query == "") {
+        if (filterOptions.size != 0) {
+            questionIndices.forEach(questionIndex => {
+                questionDivs[0][questionIndex].style.display = "flex";
+            });
+        }
+
+    } else {
+        questionIndices.forEach(questionIndex => {
+            questionDivs[0][questionIndex].style.display = questionDivs[0][questionIndex].textContent.toLowerCase().match(query) ? "flex" : "none";
+        });
+    }
+}
 
 function clickTag(index) {
     sendMessage("clickTag", { index });
@@ -1466,9 +1535,9 @@ function buildPoolFromTags() {
 function clickTagsTab() {
     currTab = Tab.TAGS;
 
-    document.getElementById("tags").style.display = "block";
-    document.getElementById("questions1").style.display = "none";
-    document.getElementById("questions2").style.display = "none";
+    document.getElementById("tagsRegion").style.display = "block";
+    document.getElementById("questions1Region").style.display = "none";
+    document.getElementById("questions2Region").style.display = "none";
 
     // redraw all tags check boxes and opacity correctly (the div should already exist)
     tagRepo.forEach((tag, index) => {
@@ -1499,9 +1568,9 @@ function clickQuestionsTab(type) {
     }
 
     if (type == 0) {
-        document.getElementById("tags").style.display = "none";
-        document.getElementById("questions1").style.display = "block";
-        document.getElementById("questions2").style.display = "none";
+        document.getElementById("tagsRegion").style.display = "none";
+        document.getElementById("questions1Region").style.display = "block";
+        document.getElementById("questions2Region").style.display = "none";
 
         // set ticks if type 1
         tickedQuestions[0].forEach(questionIndex => {
@@ -1509,9 +1578,9 @@ function clickQuestionsTab(type) {
         });
     
     } else {
-        document.getElementById("tags").style.display = "none";
-        document.getElementById("questions1").style.display = "none";
-        document.getElementById("questions2").style.display = "block";
+        document.getElementById("tagsRegion").style.display = "none";
+        document.getElementById("questions1Region").style.display = "none";
+        document.getElementById("questions2Region").style.display = "block";
     }
 
     // set crosses (type 2 ignores ticked questions)
@@ -1527,4 +1596,5 @@ function goBack() {
 }
 
 function pullBank() {
+    sendMessage("pull", {});
 }
